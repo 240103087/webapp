@@ -15,3 +15,11 @@ export async function testApp(opts: { now?: Date; config?: Partial<Config> } = {
   const deps = await buildDeps(testConfig(opts.config), () => clock.now);
   return { app: createApp(deps), deps, clock, advance: (ms: number) => (clock.now = new Date(clock.now.getTime() + ms)) };
 }
+
+/** Logs in a seed user and returns the Authorization header. */
+export async function loginHeader(app: import("express").Express, email = "aigerim@example.com") {
+  const { default: request } = await import("supertest");
+  const res = await request(app).post("/api/auth/login").send({ email, password: "password123" });
+  if (res.status !== 200) throw new Error(`login failed: ${res.status}`);
+  return { Authorization: `Bearer ${res.body.token}` };
+}
