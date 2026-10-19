@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { NotFound } from "./pages/NotFound";
 import { Placeholder } from "./pages/Placeholder";
+import { Dashboard } from "./pages/Dashboard";
 import { LoginPage, SignUpPage } from "./pages/AuthPages";
 import { GuestOnly, RequireAuth } from "./auth/RequireAuth";
 import { UserMenu } from "./auth/UserMenu";
@@ -11,7 +12,7 @@ export function AppRoutes() {
     <Routes>
       <Route element={<RequireAuth />}>
         <Route element={<Layout userMenu={<UserMenu />} />}>
-          <Route index element={<Placeholder title="My tags" />} />
+          <Route index element={<Dashboard />} />
           <Route path="tags/new" element={<Placeholder title="New tag" />} />
           <Route path="tags/:id" element={<Placeholder title="Tag" />} />
           <Route path="tags/:id/edit" element={<Placeholder title="Edit tag" />} />
