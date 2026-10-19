@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { render } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { Root } from "../App";
@@ -10,6 +11,11 @@ export async function loginAs(email = "aigerim@example.com") {
 
 export function renderApp(path: string) {
   const router = createMemoryRouter([{ path: "*", element: <Root /> }], { initialEntries: [path] });
-  const utils = render(<RouterProvider router={router} />);
+  const utils = render(
+    // Same as main.tsx, so double effects and render-time state updates show up in tests too.
+    <StrictMode>
+      <RouterProvider router={router} />
+    </StrictMode>,
+  );
   return { ...utils, router };
 }
