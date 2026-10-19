@@ -81,8 +81,10 @@ What a visitor sees, in order:
    number, room, fragile badge, contents list, and the move's name. A
    reply form if replies are on
 
-Every view of an unlocked tag counts as a **scan** (the owner's own
-previews do not). The owner sees the number of scans and the last scan
+A view of an unlocked tag counts as a **scan** (the owner's own previews
+do not). The same visitor (one browser, identified by a random visitor id)
+counts at most once per tag every 30 minutes, so reloads and React's
+double loading in development do not inflate the number (#56). The owner sees the number of scans and the last scan
 time.
 
 **Replies**: a visitor leaves a name (1-60) and a message (1-1000). The

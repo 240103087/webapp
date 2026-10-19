@@ -24,7 +24,7 @@ export function buildSeed(now = new Date()): DB {
     s.replies.forEach((r, i) =>
       db.replies.push({ id: `${s.id}_r${i + 1}`, tagId: s.id, name: r.name, message: r.message, read: r.read, createdAt: iso(t - r.minutesAgo * 60_000) }),
     );
-    for (const d of s.scansDaysAgo) db.scans.push({ tagId: s.id, at: iso(t - d * DAY - 3_600_000) });
+    for (const d of s.scansDaysAgo) db.scans.push({ tagId: s.id, at: iso(t - d * DAY - 3_600_000), visitorId: null });
   }
   return db;
 }

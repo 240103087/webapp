@@ -16,7 +16,7 @@ export interface DB {
   tags: TagRow[];
   media: MediaRow[];
   replies: ReplyRow[];
-  scans: { tagId: string; at: string }[];
+  scans: { tagId: string; at: string; visitorId: string | null }[];
   pinFailures: { tagId: string; visitorId: string; at: string }[];
   unlocks: { token: string; tagId: string; expiresAt: string }[];
   seq: number;

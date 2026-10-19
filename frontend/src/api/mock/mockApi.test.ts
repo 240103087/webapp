@@ -95,6 +95,26 @@ describe("mock api", () => {
     expect((await api.getTag("t_keys")).scanCount).toBe(before + 1);
   });
 
+  it("counts one scan per visitor per 30 minutes (#56)", async () => {
+    const api = make();
+    await api.logIn({ email: "aigerim@example.com", password: "password123" });
+    const before = (await api.getTag("t_keys")).scanCount;
+    await api.logOut();
+    await api.getPublicTag("7KQ4M2XP");
+    await api.getPublicTag("7KQ4M2XP"); // React development mode loads twice
+    clock = new Date(clock.getTime() + 10 * 60_000);
+    await api.getPublicTag("7KQ4M2XP"); // reload 10 minutes later
+    await api.logIn({ email: "aigerim@example.com", password: "password123" });
+    expect((await api.getTag("t_keys")).scanCount).toBe(before + 1);
+    await api.logOut();
+    clock = new Date(clock.getTime() + 31 * 60_000);
+    await api.getPublicTag("7KQ4M2XP");
+    localStorage.removeItem("moveeasy.visitor");
+    await api.getPublicTag("7KQ4M2XP"); // a different visitor
+    await api.logIn({ email: "aigerim@example.com", password: "password123" });
+    expect((await api.getTag("t_keys")).scanCount).toBe(before + 3);
+  });
+
   it("unlocks with the right PIN and locks after 5 wrong ones", async () => {
     const api = make();
     let e = await err(api.unlockTag("D8RW5TQN", "0000"));
