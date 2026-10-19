@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { describe, it, expect } from "vitest";
 import request from "supertest";
 import { loginHeader, testApp } from "./helpers";
@@ -86,5 +86,15 @@ describe("media API (#27)", () => {
     const after = (await request(app).get("/api/tags/t_keys").set(auth)).body.media;
     expect(after.map((m: { position: number }) => m.position)).toEqual([0, 1, 2]);
     expect((await request(app).delete(`/api/tags/t_keys/media/${ids[3]}`).set(auth)).status).toBe(404);
+  });
+
+  it("uploads still work after the upload folder was deleted under the running server (#61)", async () => {
+    const { app, auth, deps } = await setup();
+    rmSync(deps.config.uploadDir, { recursive: true, force: true }); // what `npm run db:seed` does
+    const res = await request(app).post("/api/tags/t_birthday/media").set(auth).attach("file", PNG, { filename: "a.png", contentType: "image/png" });
+    expect(res.status).toBe(201);
+    const file = await request(app).get(res.body.url).buffer(true).parse((r, cb) => { const c: Buffer[] = []; r.on("data", (d: Buffer) => c.push(d)); r.on("end", () => cb(null, Buffer.concat(c))); });
+    expect(file.status).toBe(200);
+    expect(Buffer.compare(file.body, PNG)).toBe(0);
   });
 });

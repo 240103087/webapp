@@ -32,6 +32,8 @@ export function mediaRoutes(deps: AppDeps): Router {
   r.post("/tags/:tagId/media", handle(async (req, res) => {
     const { tag } = await ownTag(deps, req);
     // Parse the multipart body only after the owner check, so strangers cannot fill the disk.
+    // The folder can disappear under a running server (`npm run db:seed` resets uploads, #61).
+    mkdirSync(tmp, { recursive: true });
     await new Promise<void>((resolve, reject) =>
       upload(req, res, (err?: unknown) => {
         if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") reject(new HttpError(413, "too_big", "Too big. Videos up to 50 MB"));
