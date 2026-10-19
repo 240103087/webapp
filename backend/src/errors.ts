@@ -23,7 +23,7 @@ export function validationError(err: ZodError): HttpError {
 
 /** Unknown `/api` routes. */
 export const apiNotFound: RequestHandler = (req, res) => {
-  res.status(404).json({ code: "not_found", message: `No route ${req.method} ${req.path}` } satisfies ApiErrorBody);
+  res.status(404).json({ code: "not_found", message: `No route ${req.method} ${req.originalUrl.split("?")[0]}` } satisfies ApiErrorBody);
 };
 
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
