@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { formatBoxNumber, normalizeCode, type Theme } from "@moveeasy/shared";
 import { api, ApiError } from "../api";
 import type { PublicTag, PublicTagView } from "../api/types";
 import { THEME_INFO } from "../components/PrivacyFields";
 import { Gallery } from "../components/Gallery";
 import { useTitle } from "../ui/useTitle";
-import { KindIcon } from "../ui/Badge";
+import { KindIcon, formatLongDateTime } from "../ui/Badge";
+import { IconArchive, IconEyeOff, IconLock, IconSearch } from "../ui/icons";
+import { Countdown } from "../components/Countdown";
+import { PinForm } from "../components/PinForm";
 
 export function PublicTagPage() {
   const { code: raw = "" } = useParams();
@@ -49,9 +52,58 @@ export function PublicTagPage() {
   );
 }
 
-/** Filled in by #15. */
-export function LockedState({ view }: { view: Exclude<PublicTagView, { state: "open" }>; code: string; onUnlocked: () => void }) {
-  return <div className="public-message"><h1>{view.state}</h1></div>;
+export function LockedState({ view, code, onUnlocked }: { view: Exclude<PublicTagView, { state: "open" }>; code: string; onUnlocked: () => void }) {
+  const [typed, setTyped] = useState("");
+  const nav = useNavigate();
+  switch (view.state) {
+    case "unknown":
+      return (
+        <div className="public-message">
+          <span className="state-icon" aria-hidden="true"><IconSearch size={32} /></span>
+          <h1 className="public-title">No tag with this code</h1>
+          <p>Check the code under the QR code and type it here.</p>
+          <form className="code-form" onSubmit={(e) => { e.preventDefault(); const c = normalizeCode(typed); if (c) nav(`/t/${c}`); }}>
+            <label htmlFor="code-input" className="sr-only">Tag code</label>
+            <input id="code-input" className="input mono" placeholder="7KQ4 M2XP" value={typed} onChange={(e) => setTyped(e.target.value)} />
+            <button className="btn btn-primary" type="submit" disabled={!normalizeCode(typed)}>Open</button>
+          </form>
+        </div>
+      );
+    case "archived":
+      return (
+        <div className="public-message">
+          <span className="state-icon" aria-hidden="true"><IconArchive size={32} /></span>
+          <h1 className="public-title">This tag is no longer active</h1>
+          <p>Its owner has archived it.</p>
+        </div>
+      );
+    case "private":
+      return (
+        <div className="public-message">
+          <span className="state-icon" aria-hidden="true"><IconEyeOff size={32} /></span>
+          <h1 className="public-title">This tag is private</h1>
+          <p>Only its owner can see what is attached.</p>
+        </div>
+      );
+    case "timeLocked":
+      return (
+        <div className="public-message time-locked">
+          <span className="seal" aria-hidden="true"><IconLock size={30} /></span>
+          {view.recipient && <p className="recipient">For {view.recipient}</p>}
+          <h1 className="public-title">{view.title}</h1>
+          <Countdown until={view.opensAt} onDone={onUnlocked} />
+          <p>This capsule opens on <strong>{formatLongDateTime(view.opensAt)}</strong>.</p>
+        </div>
+      );
+    case "pinRequired":
+      return (
+        <div className="public-message">
+          <span className="state-icon" aria-hidden="true"><IconLock size={32} /></span>
+          <h1 className="public-title">This tag is protected</h1>
+          <PinForm code={code} attemptsLeft={view.attemptsLeft} lockedUntil={view.lockedUntil} onUnlocked={onUnlocked} />
+        </div>
+      );
+  }
 }
 
 export function OpenTag({ tag, preview }: { tag: PublicTag; preview: boolean }) {

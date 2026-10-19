@@ -37,3 +37,21 @@
 .lb-prev { left: 12px; top: 50%; transform: translateY(-50%); }
 .lb-next { right: 12px; top: 50%; transform: translateY(-50%); }
 @media (max-width: 400px) { .public-title { font-size: 32px; } .box-number { font-size: 36px; } }
+.state-icon { width: 72px; height: 72px; border-radius: 50%; border: 2px solid currentColor; display: grid; place-items: center; opacity: 0.9; }
+.public-message .public-title { margin: 0; }
+.code-form { display: flex; gap: 8px; width: 100%; max-width: 340px; }
+.code-form .input { text-transform: uppercase; font-size: 18px; letter-spacing: 0.1em; }
+.seal { width: 84px; height: 84px; border-radius: 50%; background: #c63b23; color: #fff; display: grid; place-items: center; box-shadow: inset 0 0 0 6px rgba(0,0,0,.12); transform: rotate(-10deg); }
+.countdown-cells { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 420px; }
+.cd-cell { border: 2px solid currentColor; border-radius: 12px; padding: 10px 4px; display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,.35); }
+.theme-night .cd-cell { background: rgba(255,255,255,.06); }
+.cd-num { font-size: 30px; font-weight: 700; line-height: 1.1; }
+.cd-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
+.pin-form { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 320px; }
+.pin-label { font-weight: 700; }
+.pin-input { width: 100%; font-size: 32px; text-align: center; letter-spacing: 0.4em; padding: 10px; border: 2px solid currentColor; border-radius: 12px; background: rgba(255,255,255,.7); color: #1b1a17; }
+.pin-input[aria-invalid="true"] { border-color: #c63b23; }
+.pin-status { min-height: 24px; font-size: 15px; }
+.pin-error { color: #a8321e; font-weight: 700; }
+.theme-night .pin-error { color: #ffb4a6; }
+.pin-submit { width: 100%; }
