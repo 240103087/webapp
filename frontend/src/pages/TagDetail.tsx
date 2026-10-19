@@ -8,6 +8,7 @@ import { KindBadge, PrivacyBadge, TimeLockBadge, formatDateTime } from "../ui/Ba
 import { IconEdit, IconExternal } from "../ui/icons";
 import { useTitle } from "../ui/useTitle";
 import { MediaManager } from "../components/MediaManager";
+import { QrPanel } from "../components/QrPanel";
 
 export function TagDetail() {
   const { id } = useParams();
@@ -69,6 +70,7 @@ export function TagDetail() {
           <MediaManager tag={tag} onChange={(media) => setTag((t) => (t ? { ...t, media } : t))} />
         </div>
         <aside className="stack detail-side" aria-label="Tag details">
+          <QrPanel code={tag.code} title={tag.title} />
           <section className="card stack">
             <h2 className="section-title">Activity</h2>
             <dl className="facts">
