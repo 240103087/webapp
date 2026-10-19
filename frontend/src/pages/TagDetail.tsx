@@ -10,6 +10,7 @@ import { useTitle } from "../ui/useTitle";
 import { MediaManager } from "../components/MediaManager";
 import { QrPanel } from "../components/QrPanel";
 import { RepliesPanel } from "../components/RepliesPanel";
+import { TagActions } from "../components/TagActions";
 
 export function TagDetail() {
   const { id } = useParams();
@@ -40,6 +41,7 @@ export function TagDetail() {
             {tag.status === "archived" && <span className="badge badge-archived">Archived</span>}
           </div>
           <h1>{tag.title}</h1>
+          {tag.status === "archived" && <p className="alert-soft">Archived. Visitors who scan this QR code see “This tag is no longer active”.</p>}
           {tag.recipient && <p className="muted">For {tag.recipient}</p>}
           {tag.kind === "box" && (
             <p className="muted">
@@ -52,6 +54,7 @@ export function TagDetail() {
         <div className="row">
           <ButtonLink to={`/t/${tag.code}`} target="_blank" rel="noopener" icon={<IconExternal size={18} />}>Open public page</ButtonLink>
           <ButtonLink to={`/tags/${tag.id}/edit`} variant="primary" icon={<IconEdit size={18} />}>Edit</ButtonLink>
+          <TagActions tag={tag} onChange={(t) => setTag((old) => (old ? { ...old, status: t.status, updatedAt: t.updatedAt } : t))} />
         </div>
       </div>
 

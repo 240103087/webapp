@@ -131,7 +131,7 @@ export function Dashboard() {
         <>
           <p className="sr-only" aria-live="polite">{tags.length} tags</p>
           <div className="tag-grid">
-            {tags.map((t) => <TagCard key={t.id} tag={t} />)}
+            {tags.map((t) => <TagCard key={t.id} tag={t} onChanged={load} />)}
           </div>
         </>
       )}
