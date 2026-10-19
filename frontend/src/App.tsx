@@ -9,6 +9,7 @@ import "./styles/layout.css";
 import "./styles/dashboard.css";
 import "./styles/editor.css";
 import "./styles/public.css";
+import "./styles/moves.css";
 
 export function Root() {
   return (

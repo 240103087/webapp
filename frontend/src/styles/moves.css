@@ -1,0 +1,17 @@
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+.move-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.move-card { display: flex; gap: 16px; align-items: center; color: inherit; text-decoration: none; flex-wrap: wrap; }
+.move-card:hover { box-shadow: var(--shadow); color: inherit; }
+.move-icon { width: 52px; height: 52px; border-radius: 12px; background: var(--kraft-tint); color: var(--kraft-ink); display: grid; place-items: center; }
+.move-name { font-family: var(--font-display); font-size: 20px; }
+.move-count { font-weight: 700; }
+.rooms { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 8px; }
+.room { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
+.room-title { font-size: 18px; margin-bottom: 10px; }
+.box-cards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.box-card { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: center; padding: 10px; border-radius: var(--radius-sm); background: var(--kraft-tint); color: inherit; text-decoration: none; }
+.box-card:hover { background: #ecdfc8; color: inherit; }
+.box-chip { grid-row: span 2; background: #fff; border: 2px solid var(--ink); border-radius: 6px; padding: 2px 8px; font-weight: 700; font-size: 14px; }
+.box-title { font-weight: 700; }
+.box-card .badge-fragile { grid-column: 2; justify-self: start; font-size: 11px; }
