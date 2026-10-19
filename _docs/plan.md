@@ -56,7 +56,10 @@ Every tag has one of three privacy modes:
 - **PIN** - the visitor must enter a 4-6 digit PIN. The PIN is stored
   hashed. After 5 wrong PINs from the same browser session in 15 minutes,
   the tag refuses PINs for 15 minutes. A correct PIN gives an access token
-  valid for 24 hours, so a reload does not ask again
+  valid for 24 hours, so a reload does not ask again. Saving the tag with
+  a new PIN, or switching it away from PIN, ends every earlier unlock, so
+  an owner can shut out people who learned the old PIN (#60). Saving other
+  changes keeps them
 - **Private** - only the owner sees it; a visitor sees "This tag is
   private"
 
@@ -86,6 +89,12 @@ do not). The same visitor (one browser, identified by a random visitor id)
 counts at most once per tag every 30 minutes, so reloads and React's
 double loading in development do not inflate the number (#56). The owner sees the number of scans and the last scan
 time.
+
+**When the server cannot answer** (no connection, or a 5xx), every page
+that loads data shows what went wrong with a Retry button, and keeps
+anything already typed into a form. A 404 shows its own text without
+Retry. An owner whose session expired is sent to log in and back to the
+same page (#37, #59).
 
 **Replies**: a visitor leaves a name (1-60) and a message (1-1000). The
 owner sees replies on the tag's page in the dashboard and can delete them.
