@@ -69,6 +69,39 @@ describe("http api (#36)", () => {
     expect(calls[1].body).toEqual({ mediaIds: ["m2", "m1"] });
   });
 
+  it("covers every other method with its contract path", async () => {
+    setToken("t");
+    const { api, calls } = stub([]);
+    const tag = { kind: "gift" as const, title: "X" };
+    const cases: Array<[() => Promise<unknown>, string, unknown?]> = [
+      [() => api.signUp({ name: "A", email: "a@example.com", password: "password1" }), "POST /api/auth/signup", { name: "A" }],
+      [() => api.logOut(), "POST /api/auth/logout"],
+      [() => api.getTag("t1"), "GET /api/tags/t1"],
+      [() => api.createTag(tag), "POST /api/tags", tag],
+      [() => api.updateTag("t1", tag), "PUT /api/tags/t1", tag],
+      [() => api.getStats(), "GET /api/stats"],
+      [() => api.deleteMedia("t1", "m1"), "DELETE /api/tags/t1/media/m1"],
+      [() => api.listReplies("t1"), "GET /api/tags/t1/replies"],
+      [() => api.deleteReply("t1", "r1"), "DELETE /api/tags/t1/replies/r1"],
+      [() => api.listMoves(), "GET /api/moves"],
+      [() => api.getMove("m1"), "GET /api/moves/m1"],
+      [() => api.createMove({ name: "M" }), "POST /api/moves", { name: "M" }],
+      [() => api.updateMove("m1", { name: "N" }), "PUT /api/moves/m1", { name: "N" }],
+      [() => api.deleteMove("m1"), "DELETE /api/moves/m1"],
+      [() => api.getPublicTag("7KQ4M2XP"), "GET /api/public/tags/7KQ4M2XP"],
+      [() => api.postReply("7KQ4M2XP", { name: "V", message: "hi" }), "POST /api/public/tags/7KQ4M2XP/replies", { message: "hi" }],
+    ];
+    for (const [run, expected, body] of cases) {
+      setToken("t");
+      // signUp needs a session back; everything else is fine with 204.
+      calls.length = 0;
+      await run().catch(() => undefined);
+      const c = calls[0];
+      expect(`${c.method} ${c.url.replace("http://x", "")}`).toBe(expected);
+      if (body) expect(c.body).toMatchObject(body as object);
+    }
+  });
+
   it("turns error bodies into ApiError with fields and PIN details", async () => {
     const { api } = stub([
       { status: 422, body: { code: "validation", message: "Check the form", fields: { title: "Title is required" } } },
@@ -125,6 +158,53 @@ describe("http api (#36)", () => {
     const { api } = stub(["offline"]);
     await err(api.logOut());
     expect(getToken()).toBeNull();
+  });
+
+  it("uploads with XMLHttpRequest, reports progress and maps a 413", async () => {
+    const sent: FakeXhr[] = [];
+    class FakeXhr {
+      status = 0;
+      responseText = "";
+      method = "";
+      url = "";
+      headers: Record<string, string> = {};
+      body: FormData | null = null;
+      upload: { onprogress?: (e: { lengthComputable: boolean; loaded: number; total: number }) => void } = {};
+      onload?: () => void;
+      onerror?: () => void;
+      open(m: string, u: string) { this.method = m; this.url = u; }
+      setRequestHeader(k: string, v: string) { this.headers[k] = v; }
+      send(b: FormData) { this.body = b; sent.push(this); }
+    }
+    vi.stubGlobal("XMLHttpRequest", FakeXhr);
+    setToken("t");
+    const { api } = stub([]);
+    const progress: number[] = [];
+    const p = api.uploadMedia("t1", new File(["x"], "a.png", { type: "image/png" }), { caption: "Cake", onProgress: (f) => progress.push(f) });
+    const x = sent[0];
+    expect(x.method).toBe("POST");
+    expect(x.url).toBe("http://x/api/tags/t1/media");
+    expect(x.headers.Authorization).toBe("Bearer t");
+    expect((x.body?.get("file") as File).name).toBe("a.png");
+    expect(x.body?.get("caption")).toBe("Cake");
+    x.upload.onprogress?.({ lengthComputable: true, loaded: 50, total: 100 });
+    x.status = 201;
+    x.responseText = JSON.stringify({ id: "m1" });
+    x.onload?.();
+    expect(await p).toEqual({ id: "m1" });
+    expect(progress).toEqual([0.5, 1]);
+
+    const p2 = api.uploadMedia("t1", new Blob(["x"], { type: "audio/webm" }));
+    sent[1].status = 413;
+    sent[1].responseText = JSON.stringify({ code: "too_big", message: "Files can be up to 25 MB" });
+    sent[1].onload?.();
+    const e = await err(p2);
+    expect(e.status).toBe(413);
+    expect(e.code).toBe("too_big");
+    const p3 = api.uploadMedia("t1", new Blob(["x"]));
+    sent[2].onerror?.();
+    expect((await err(p3)).status).toBe(0);
+    vi.unstubAllGlobals();
   });
 
   it("remembers a PIN unlock and sends it for that tag only", async () => {
