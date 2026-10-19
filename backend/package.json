@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "start": "tsx src/server.ts",
+    "start": "STATIC_DIR=frontend/dist tsx src/server.ts",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run && TEST_STORE=prisma vitest run",
     "db:migrate": "tsx src/db-cli.ts migrate",

@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import express, { type Express } from "express";
 import { loadConfig, type Config } from "./config";
 import { apiNotFound, errorHandler } from "./errors";
@@ -66,6 +68,25 @@ export function createApp(deps: AppDeps): Express {
   app.use("/api", statsRoutes(deps));
 
   app.use("/api", apiNotFound);
+  if (deps.config.staticDir) serveFrontend(app, deps.config.staticDir);
   app.use(errorHandler);
   return app;
+}
+
+/**
+ * `npm start` (#38): the built frontend and the API on one port. Hashed assets are cached for a year;
+ * every other GET outside /api gets index.html so client routes like /t/<code> open directly.
+ */
+function serveFrontend(app: Express, dir: string) {
+  const index = path.join(dir, "index.html");
+  if (!fs.existsSync(index)) throw new Error(`STATIC_DIR has no index.html: ${dir}. Run npm run build first.`);
+  app.use("/assets", express.static(path.join(dir, "assets"), { immutable: true, maxAge: "1y" }));
+  app.use("/assets", (_req, res) => {
+    res.status(404).end();
+  });
+  app.use(express.static(dir, { index: false, maxAge: "1h" }));
+  app.get("*", (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache");
+    res.sendFile(index);
+  });
 }
