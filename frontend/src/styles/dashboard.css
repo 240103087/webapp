@@ -9,7 +9,7 @@
 .search-box svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink-muted); }
 .search-box .input { padding-left: 38px; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.chip { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); cursor: pointer; font-weight: 700; font-size: 14px; }
+.chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); cursor: pointer; font-weight: 700; font-size: 14px; }
 .chip:hover { border-color: var(--ink-muted); }
 .chip-on { background: var(--ink); color: #fff; border-color: var(--ink); }
 .toolbar-selects { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
