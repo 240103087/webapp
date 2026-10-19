@@ -1,6 +1,6 @@
 import { useRef, useState, type DragEvent } from "react";
 import { MAX_MEDIA_PER_TAG, checkMediaFile, MEDIA_LIMITS } from "@moveeasy/shared";
-import { api, ApiError } from "../api";
+import { api, ApiError, MOCK_PERSIST_MAX_BYTES } from "../api";
 import type { Media, Tag } from "../api/types";
 import { Button } from "../ui/Button";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
@@ -30,6 +30,7 @@ export function MediaManager({ tag, onChange }: { tag: Tag; onChange: (media: Me
   async function addFiles(files: File[]) {
     let room = MAX_MEDIA_PER_TAG - media.length - uploads.filter((u) => !u.error).length;
     const added: Media[] = [];
+    let sessionOnly = 0;
     await Promise.all(
       files.map(async (file, i) => {
         const key = `${Date.now()}-${i}-${file.name}`;
@@ -47,6 +48,7 @@ export function MediaManager({ tag, onChange }: { tag: Tag; onChange: (media: Me
         try {
           const m = await api.uploadMedia(tag.id, file, { onProgress: (p) => setUploads((u) => u.map((x) => (x.key === key ? { ...x, progress: p } : x))) });
           added.push(m);
+          if (api.mode === "mock" && file.size > MOCK_PERSIST_MAX_BYTES) sessionOnly++;
           setUploads((u) => u.filter((x) => x.key !== key));
           // Keep the latest list in a ref so parallel uploads add up, then update state and the parent separately.
           listRef.current = [...listRef.current, m].sort((a, b) => a.position - b.position);
@@ -56,7 +58,11 @@ export function MediaManager({ tag, onChange }: { tag: Tag; onChange: (media: Me
         }
       }),
     );
-    if (added.length) toast.show(added.length === 1 ? "File added" : `${added.length} files added`);
+    if (added.length) {
+      const text = added.length === 1 ? "File added" : `${added.length} files added`;
+      // Demo mode keeps big files only in this page (#57).
+      toast.show(sessionOnly ? `${text}. In demo mode files over 1.5 MB are kept only until the page is reloaded.` : text);
+    }
   }
 
   async function move(index: number, dir: -1 | 1) {

@@ -38,6 +38,18 @@ import { buildSeed } from "./seed";
 const STORAGE_KEY = "moveeasy.mock.v1";
 const REPLY_LIMIT_PER_HOUR = 10;
 
+/** Uploads up to this size are stored in localStorage in demo mode (#57). */
+export const MOCK_PERSIST_MAX_BYTES = 1.5 * 1024 * 1024;
+
+function readAsDataUrl(file: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
 function fail(status: number, code: string, message: string, extra: Partial<ApiError> = {}): never {
   throw new ApiError(status, { code, message, ...extra });
 }
@@ -80,7 +92,12 @@ export function createMockApi(opts: MockOptions = {}): Api {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
     } catch {
-      /* quota: keep working in memory */
+      // Storage full: save everything except uploaded files, which stay in memory for this page.
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...db, media: db.media.filter((m) => !m.url.startsWith("data:")) }));
+      } catch {
+        /* still full: keep working in memory */
+      }
     }
   }
   async function delay() {
@@ -286,9 +303,11 @@ export function createMockApi(opts: MockOptions = {}): Api {
         await delay();
         options.onProgress?.(i / 4);
       }
+      // Small files are kept as data URLs so they survive a reload; bigger ones live only as long as the page.
+      const keep = file.size <= MOCK_PERSIST_MAX_BYTES;
       const row: MediaRow = {
         id: id("m"), tagId: t.id, type: check.type, mimeType: file.type.split(";")[0], size: file.size, caption: caption.data,
-        position: mediaOf(t.id).length, url: URL.createObjectURL(file), createdAt: iso(), sessionOnly: true,
+        position: mediaOf(t.id).length, url: keep ? await readAsDataUrl(file) : URL.createObjectURL(file), createdAt: iso(), sessionOnly: !keep,
       };
       db.media.push(row);
       save();

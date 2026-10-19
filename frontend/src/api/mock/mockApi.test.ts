@@ -171,4 +171,21 @@ describe("mock api", () => {
     const b = make();
     expect((await b.listTags()).map((t) => t.title)).toContain("Persisted");
   });
+
+  it("keeps a small upload after the mock is rebuilt from storage, a big one only for the page (#57)", async () => {
+    let api = make();
+    await api.logIn({ email: "aigerim@example.com", password: "password123" });
+    URL.createObjectURL = () => "blob:test/1";
+    const small = new File(["hello"], "small.png", { type: "image/png" });
+    const big = new File(["x"], "big.png", { type: "image/png" });
+    Object.defineProperty(big, "size", { value: 2 * 1024 * 1024 });
+    const m1 = await api.uploadMedia("t_birthday", small);
+    expect(m1.url.startsWith("data:image/png")).toBe(true);
+    const m2 = await api.uploadMedia("t_birthday", big);
+    expect(m2.url).toBe("blob:test/1");
+    api = make(); // a page reload
+    const media = (await api.getTag("t_birthday")).media;
+    expect(media.map((m) => m.id)).toContain(m1.id);
+    expect(media.map((m) => m.id)).not.toContain(m2.id);
+  });
 });
