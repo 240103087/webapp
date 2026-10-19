@@ -55,3 +55,10 @@
 .pin-error { color: #a8321e; font-weight: 700; }
 .theme-night .pin-error { color: #ffb4a6; }
 .pin-submit { width: 100%; }
+.reply-box { margin-top: 32px; padding-top: 24px; border-top: 2px dashed currentColor; }
+.reply-form { display: flex; flex-direction: column; gap: 12px; }
+.reply-form label { font-weight: 700; font-size: 14px; }
+.reply-form .input, .reply-form .textarea { background: rgba(255,255,255,.85); color: #1b1a17; min-height: 44px; }
+.reply-form .textarea { min-height: 96px; }
+.reply-ok { font-weight: 700; color: #1f6f6b; }
+.theme-night .reply-ok { color: #9fe0d8; }

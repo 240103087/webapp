@@ -10,6 +10,7 @@ import { KindIcon, formatLongDateTime } from "../ui/Badge";
 import { IconArchive, IconEyeOff, IconLock, IconSearch } from "../ui/icons";
 import { Countdown } from "../components/Countdown";
 import { PinForm } from "../components/PinForm";
+import { ReplyForm } from "../components/ReplyForm";
 
 export function PublicTagPage() {
   const { code: raw = "" } = useParams();
@@ -138,6 +139,8 @@ export function OpenTag({ tag, preview }: { tag: PublicTag; preview: boolean }) 
         </section>
       )}
       {tag.media.length > 0 && <Gallery media={tag.media} title={tag.title} />}
+      {tag.allowReplies && !preview && <ReplyForm code={tag.code} />}
+      {tag.allowReplies && preview && <p className="small">Visitors see a reply form here.</p>}
     </article>
   );
 }

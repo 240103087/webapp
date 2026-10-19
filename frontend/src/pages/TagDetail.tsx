@@ -9,6 +9,7 @@ import { IconEdit, IconExternal } from "../ui/icons";
 import { useTitle } from "../ui/useTitle";
 import { MediaManager } from "../components/MediaManager";
 import { QrPanel } from "../components/QrPanel";
+import { RepliesPanel } from "../components/RepliesPanel";
 
 export function TagDetail() {
   const { id } = useParams();
@@ -68,6 +69,7 @@ export function TagDetail() {
             {tag.kind === "box" && tag.message && <p className="prewrap muted">{tag.message}</p>}
           </section>
           <MediaManager tag={tag} onChange={(media) => setTag((t) => (t ? { ...t, media } : t))} />
+          <RepliesPanel tagId={tag.id} allowReplies={tag.allowReplies} onRead={() => setTag((t) => (t ? { ...t, unreadReplies: 0 } : t))} />
         </div>
         <aside className="stack detail-side" aria-label="Tag details">
           <QrPanel code={tag.code} title={tag.title} />
