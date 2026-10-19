@@ -13,7 +13,11 @@ export async function testApp(opts: { now?: Date; config?: Partial<Config> } = {
   const { buildDeps, createApp } = await import("../src/app");
   const clock = { now: opts.now ?? new Date("2026-10-19T10:00:00Z") };
   const deps = await buildDeps(testConfig(opts.config), () => clock.now);
-  return { app: createApp(deps), deps, clock, advance: (ms: number) => (clock.now = new Date(clock.now.getTime() + ms)) };
+  // Every response goes through the contract check (#32).
+  const { default: express } = await import("express");
+  const { contractCheck } = await import("./contract");
+  const app = express().use(contractCheck).use(createApp(deps));
+  return { app, deps, clock, advance: (ms: number) => (clock.now = new Date(clock.now.getTime() + ms)) };
 }
 
 /** Logs in a seed user and returns the Authorization header. */

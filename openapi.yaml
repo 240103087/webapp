@@ -134,6 +134,7 @@ paths:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/Tag" } }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/Validation" }
     post:
       tags: [tags]
       operationId: createTag
@@ -509,6 +510,7 @@ paths:
               schema: { type: array, items: { $ref: "#/components/schemas/MoveSearchHit" } }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/Validation" }
 
   # ---------------------------------------------------------------- public
   /api/public/tags/{code}:
