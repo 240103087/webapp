@@ -29,7 +29,7 @@ function focusFirstError(fields: Record<string, string>) {
 
 export function LoginPage() {
   useTitle("Log in");
-  const { logIn } = useAuth();
+  const { logIn, sessionExpired } = useAuth();
   const nav = useNavigate();
   const [params] = useSearchParams();
   const [email, setEmail] = useState("");
@@ -65,6 +65,7 @@ export function LoginPage() {
   return (
     <AuthShell title="Log in">
       <form onSubmit={submit} noValidate className="stack">
+        {sessionExpired && !formError && <p className="alert-soft" role="status">Your session has ended. Log in again to continue.</p>}
         {formError && (
           <div className="alert" role="alert">
             <IconAlert size={20} />

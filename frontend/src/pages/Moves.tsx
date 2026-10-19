@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import type { Move } from "../api/types";
@@ -8,16 +8,19 @@ import { IconPlus, IconTruck } from "../ui/icons";
 import { useTitle } from "../ui/useTitle";
 import { MoveForm } from "../components/MoveForm";
 import { formatDate } from "../ui/Badge";
+import { LoadError } from "../ui/LoadError";
 
 export function MovesPage() {
   useTitle("Moves");
   const [moves, setMoves] = useState<Move[] | null>(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<unknown>(null);
   const [creating, setCreating] = useState(false);
   const nav = useNavigate();
-  useEffect(() => {
-    api.listMoves().then(setMoves).catch((e: Error) => setError(e.message));
+  const load = useCallback(() => {
+    setError(null);
+    api.listMoves().then(setMoves).catch(setError);
   }, []);
+  useEffect(load, [load]);
   return (
     <div className="container">
       <div className="page-head">
@@ -29,7 +32,7 @@ export function MovesPage() {
       </div>
       {creating && <div className="narrow" style={{ marginBottom: 24 }}><MoveForm onSaved={(m) => nav(`/moves/${m.id}`)} onCancel={() => setCreating(false)} /></div>}
       {error ? (
-        <div className="alert" role="alert">{error}</div>
+        <LoadError error={error} onRetry={load} />
       ) : moves === null ? (
         <div className="spinner" role="status" aria-label="Loading" />
       ) : moves.length === 0 ? (

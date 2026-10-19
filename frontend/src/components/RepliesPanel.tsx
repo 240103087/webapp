@@ -5,11 +5,14 @@ import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { useToast } from "../ui/Toast";
 import { formatDateTime } from "../ui/Badge";
 import { IconTrash } from "../ui/icons";
+import { LoadError } from "../ui/LoadError";
 
 /** Owner's list of replies. Opening it marks them as read. */
 export function RepliesPanel({ tagId, allowReplies, onRead }: { tagId: string; allowReplies: boolean; onRead: () => void }) {
   const [replies, setReplies] = useState<Reply[] | null>(null);
   const [toDelete, setToDelete] = useState<Reply | null>(null);
+  const [loadError, setLoadError] = useState<unknown>(null);
+  const [attempt, setAttempt] = useState(0);
   const toast = useToast();
 
   useEffect(() => {
@@ -21,9 +24,9 @@ export function RepliesPanel({ tagId, allowReplies, onRead }: { tagId: string; a
         await api.markRepliesRead(tagId);
         onRead();
       }
-    }).catch(() => alive && setReplies([]));
+    }).catch((e) => alive && setLoadError(e));
     return () => { alive = false; };
-  }, [tagId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tagId, attempt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function remove() {
     if (!toDelete) return;
@@ -42,7 +45,9 @@ export function RepliesPanel({ tagId, allowReplies, onRead }: { tagId: string; a
     <section className="card stack" aria-labelledby="sec-replies">
       <h2 id="sec-replies" className="section-title">Replies {replies && replies.length > 0 && <span className="muted">({replies.length})</span>}</h2>
       {!allowReplies && <p className="muted small">Replies are off for this tag. Turn them on in Edit.</p>}
-      {replies === null ? (
+      {loadError ? (
+        <LoadError error={loadError} onRetry={() => { setLoadError(null); setAttempt((n) => n + 1); }} />
+      ) : replies === null ? (
         <div className="spinner" role="status" aria-label="Loading replies" />
       ) : replies.length === 0 ? (
         <p className="muted">No replies yet.</p>

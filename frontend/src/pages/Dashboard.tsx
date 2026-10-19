@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { TagKind } from "@moveeasy/shared";
 import { api } from "../api";
@@ -8,6 +8,7 @@ import { Button, ButtonLink } from "../ui/Button";
 import { EmptyState } from "../ui/EmptyState";
 import { IconPlus, IconSearch, IconTag } from "../ui/icons";
 import { useTitle } from "../ui/useTitle";
+import { LoadError } from "../ui/LoadError";
 
 const KINDS: { value: "" | TagKind; label: string }[] = [
   { value: "", label: "All" },
@@ -28,8 +29,9 @@ export function Dashboard() {
   const [tags, setTags] = useState<Tag[] | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [moves, setMoves] = useState<Move[]>([]);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<unknown>(null);
   const [search, setSearch] = useState(q);
+  const latest = useRef(0);
 
   const update = useCallback(
     (patch: Record<string, string>) => {
@@ -52,16 +54,19 @@ export function Dashboard() {
   }, [search, q, update]);
 
   const load = useCallback(() => {
-    setError("");
+    setError(null);
     setTags(null);
     const query: TagQuery = { q: q || undefined, kind: kind || undefined, moveId: moveId || undefined, archived, sort };
+    // Only the latest request may update the page; an older, slower one is ignored.
+    const n = ++latest.current;
     Promise.all([api.listTags(query), api.getStats(), api.listMoves()])
       .then(([t, s, m]) => {
+        if (n !== latest.current) return;
         setTags(t);
         setStats(s);
         setMoves(m);
       })
-      .catch((e: Error) => setError(e.message || "Could not load your tags"));
+      .catch((e) => n === latest.current && setError(e));
   }, [q, kind, moveId, archived, sort]);
   useEffect(load, [load]);
 
@@ -114,9 +119,7 @@ export function Dashboard() {
       </div>
 
       {error ? (
-        <div className="alert" role="alert">
-          {error} <Button size="sm" onClick={load}>Retry</Button>
-        </div>
+        <LoadError error={error} onRetry={load} />
       ) : tags === null ? (
         <div className="tag-grid" aria-busy="true" aria-label="Loading tags">
           {Array.from({ length: 6 }, (_, i) => <div key={i} className="skeleton" style={{ height: 300 }} />)}

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { formatBoxNumber } from "@moveeasy/shared";
-import { api, ApiError } from "../api";
+import { api } from "../api";
 import type { Tag } from "../api/types";
 import { ButtonLink } from "../ui/Button";
 import { KindBadge, PrivacyBadge, TimeLockBadge, formatDateTime } from "../ui/Badge";
@@ -11,22 +11,21 @@ import { MediaManager } from "../components/MediaManager";
 import { QrPanel } from "../components/QrPanel";
 import { RepliesPanel } from "../components/RepliesPanel";
 import { TagActions } from "../components/TagActions";
+import { LoadError } from "../ui/LoadError";
 
 export function TagDetail() {
   const { id } = useParams();
   const [tag, setTag] = useState<Tag | null>(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<unknown>(null);
   useTitle(tag?.title ?? "Tag");
 
   const load = useCallback(() => {
-    api
-      .getTag(id!)
-      .then(setTag)
-      .catch((e: ApiError) => setError(e.status === 404 ? "This tag does not exist or is not yours." : e.message));
+    setError(null);
+    api.getTag(id!).then(setTag).catch(setError);
   }, [id]);
   useEffect(load, [load]);
 
-  if (error) return <div className="container narrow"><div className="alert" role="alert">{error} <Link to="/">Back to my tags</Link></div></div>;
+  if (error) return <div className="container narrow"><LoadError error={error} notFound="This tag does not exist or is not yours." onRetry={load}><Link to="/">Back to my tags</Link></LoadError></div>;
   if (!tag) return <div className="container"><div className="spinner" role="status" aria-label="Loading" /></div>;
 
   return (

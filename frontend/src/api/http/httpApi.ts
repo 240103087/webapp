@@ -1,5 +1,6 @@
 import type { ApiErrorBody, Media, PublicTagView, Session, TagQuery, User } from "@moveeasy/shared";
 import { ApiError, type Api, type UploadOptions } from "../types";
+import { SESSION_EXPIRED_EVENT } from "../types";
 import { getToken, getUnlock, getVisitorId, saveUnlock, setToken } from "../clientState";
 
 export interface HttpOptions {
@@ -55,7 +56,7 @@ export function createHttpApi(opts: HttpOptions = {}): Api {
   function notifyUnauthorized(err: ApiError, path: string) {
     if (err.status === 401 && err.code === "unauthorized" && !path.startsWith("/api/auth/")) {
       setToken(null);
-      window.dispatchEvent(new CustomEvent("moveeasy:unauthorized"));
+      window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
     }
   }
 

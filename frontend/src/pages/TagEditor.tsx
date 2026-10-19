@@ -12,6 +12,7 @@ import { KindIcon, KIND_LABEL } from "../ui/Badge";
 import { IconAlert } from "../ui/icons";
 import { ContentsEditor } from "../components/ContentsEditor";
 import { MoveQuickForm } from "../components/MoveQuickForm";
+import { LoadError } from "../ui/LoadError";
 import { PrivacyFields, type PrivacyState } from "../components/PrivacyFields";
 
 export interface FormState extends PrivacyState {
@@ -95,7 +96,8 @@ export function TagEditor() {
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [loadError, setLoadError] = useState("");
+  const [loadError, setLoadError] = useState<unknown>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     api.listMoves().then(setMoves).catch(() => setMoves([]));
@@ -108,9 +110,9 @@ export function TagEditor() {
           setForm(f);
           setInitial(JSON.stringify(f));
         })
-        .catch((e: ApiError) => setLoadError(e.status === 404 ? "This tag does not exist or is not yours." : e.message));
+        .catch(setLoadError);
     }
-  }, [editing, id]);
+  }, [editing, id, attempt]);
 
   const dirty = !!form && JSON.stringify(form) !== initial && !saved;
   const blocker = useBlocker(({ currentLocation, nextLocation }) => dirty && currentLocation.pathname !== nextLocation.pathname);
@@ -127,7 +129,12 @@ export function TagEditor() {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm((f) => (f ? { ...f, [k]: v } : f));
   const moveOptions = useMemo(() => moves ?? [], [moves]);
 
-  if (loadError) return <div className="container narrow"><div className="alert" role="alert">{loadError}</div></div>;
+  if (loadError)
+    return (
+      <div className="container narrow">
+        <LoadError error={loadError} notFound="This tag does not exist or is not yours." onRetry={() => { setLoadError(null); setAttempt((n) => n + 1); }} />
+      </div>
+    );
   if (!form) return <div className="container narrow"><div className="spinner" role="status" aria-label="Loading" /></div>;
 
   function switchKind(kind: TagKind) {

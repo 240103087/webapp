@@ -12,12 +12,13 @@ import { formatDate } from "../ui/Badge";
 import { IconBox, IconEdit, IconPlus, IconPrinter, IconTrash } from "../ui/icons";
 import { MoveForm } from "../components/MoveForm";
 import { MoveSearch } from "../components/MoveSearch";
+import { LoadError } from "../ui/LoadError";
 
 export function MovePage() {
   const { id } = useParams();
   const [params] = useSearchParams();
   const [move, setMove] = useState<MoveDetail | null>(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<unknown>(null);
   const [editing, setEditing] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -25,7 +26,8 @@ export function MovePage() {
   const toast = useToast();
   useTitle(move?.name ?? "Move");
   const load = useCallback(() => {
-    api.getMove(id!).then(setMove).catch((e: ApiError) => setError(e.status === 404 ? "This move does not exist or is not yours." : e.message));
+    setError(null);
+    api.getMove(id!).then(setMove).catch(setError);
   }, [id]);
   useEffect(load, [load]);
 
@@ -41,7 +43,7 @@ export function MovePage() {
     }
   }
 
-  if (error) return <div className="container narrow"><div className="alert" role="alert">{error} <Link to="/moves">All moves</Link></div></div>;
+  if (error) return <div className="container narrow"><LoadError error={error} notFound="This move does not exist or is not yours." onRetry={load}><Link to="/moves">All moves</Link></LoadError></div>;
   if (!move) return <div className="container"><div className="spinner" role="status" aria-label="Loading" /></div>;
   const searching = !!params.get("q");
 
