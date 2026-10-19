@@ -5,7 +5,8 @@
 .counter-hot { border-color: var(--accent); background: #fff8f6; }
 .counter-hot .counter-num { color: var(--accent-ink); }
 .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
-.search-box { position: relative; flex: 1 1 240px; }
+.search-box { position: relative; }
+.toolbar .search-box { flex: 1 1 240px; }
 .search-box svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink-muted); }
 .search-box .input { padding-left: 38px; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
