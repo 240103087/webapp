@@ -4,6 +4,7 @@ import { apiNotFound, errorHandler } from "./errors";
 import { FileStore, UrlSigner } from "./files";
 import { authRoutes } from "./routes/auth";
 import { mediaRoutes } from "./routes/media";
+import { moveRoutes } from "./routes/moves";
 import { publicRoutes } from "./routes/public";
 import { replyRoutes } from "./routes/replies";
 import { tagRoutes } from "./routes/tags";
@@ -55,6 +56,7 @@ export function createApp(deps: AppDeps): Express {
   app.use("/api", mediaRoutes(deps));
   app.use("/api", publicRoutes(deps));
   app.use("/api", replyRoutes(deps));
+  app.use("/api", moveRoutes(deps));
 
   app.use("/api", apiNotFound);
   app.use(errorHandler);
