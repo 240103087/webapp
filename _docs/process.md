@@ -79,6 +79,15 @@ PM grooms --> Engineer implements --> QA verifies --PASS--> merge, QA closes
    comments `## Merged` with the commit. QA then closes the issue as
    completed
 
+## CI
+
+`.github/workflows/ci.yml` runs on every push: `npm test` and `npm run
+build`, then the Playwright tests (`npm run e2e`). Traces are uploaded when
+an end-to-end test fails. A red `main` is fixed before anything else. When
+the proof of a fix is CI itself (for example an unhandled rejection that
+only showed up there, #59), QA closes the issue after CI is green on
+`main`.
+
 ## Orchestrator
 
 The main session is the orchestrator. It starts the roles and does none

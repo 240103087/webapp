@@ -42,7 +42,10 @@ Read only what the task needs:
 - `npm test -w backend` - one workspace; `npx vitest run path/to/file`
   inside a workspace - one file
 - `npm run build` - type-check and build everything
-- `npm run e2e` - Playwright end-to-end tests (builds and starts the app)
+- `npm run e2e` - Playwright end-to-end tests (builds and starts the app
+  on :8788 with its own database)
+- `npm run build && npm start` - the built app and the API on one port
+  (:8787), like production
 - `npm run db:migrate -w backend`, `npm run db:seed -w backend` - Prisma
 
 ## Rules
@@ -60,6 +63,12 @@ Read only what the task needs:
 - User text goes into the page as React text, never through
   `dangerouslySetInnerHTML`
 - Times are ISO strings in UTC in the API; the UI shows local time
+- A rule both the mock and the backend apply (privacy, PIN lockout, scan
+  counting, ending unlocks) is a function in `shared/src/access.ts`, called
+  from both. Never write it twice
+- Every page or panel that loads data catches the error and shows
+  `ui/LoadError.tsx` (message, and Retry for no connection or 5xx). Never
+  turn a failed load into an empty list
 - Every change keeps `npm test` and `npm run build` green
 - Commit after every meaningful step; messages reference the issue:
   `Add the PIN form (#15)`

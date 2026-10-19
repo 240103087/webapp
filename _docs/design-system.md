@@ -42,7 +42,7 @@ Defined once in `frontend/src/styles/tokens.css` as CSS variables.
 | `--ink` | `#1B1A17` | text |
 | `--ink-muted` | `#5F5A52` | secondary text (passes 4.5:1 on ground) |
 | `--line` | `#E7E2D9` | borders, dividers |
-| `--accent` | `#D9442B` | primary buttons, FRAGILE, destructive confirm |
+| `--accent` | `#C63B23` | primary buttons, FRAGILE, destructive confirm. Darker than the first canvas value (`#D9442B`) so white button text passes 4.5:1 (#21) |
 | `--accent-ink` | `#B5361F` | accent text on light backgrounds |
 | `--kraft` | `#C9A774` | box labels, box number backgrounds |
 | `--kraft-tint` | `#F3EBDD` | box badges, highlights |
