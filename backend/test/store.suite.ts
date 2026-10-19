@@ -118,6 +118,11 @@ export function storeSuite(name: string, make: () => Promise<Store>) {
       expect(await s.listPinFailures("a", "v2")).toHaveLength(1);
       await s.insertUnlock({ token: "ul", tagId: "a", expiresAt: at });
       expect(await s.getUnlock("ul")).toEqual({ token: "ul", tagId: "a", expiresAt: at });
+      await s.insertTag(tag("b"));
+      await s.insertUnlock({ token: "ub", tagId: "b", expiresAt: at });
+      await s.deleteUnlocks("a"); // #60
+      expect(await s.getUnlock("ul")).toBeNull();
+      expect(await s.getUnlock("ub")).not.toBeNull();
     });
 
     it("deleting a tag removes everything that belongs to it", async () => {

@@ -17,6 +17,7 @@ import {
   visitorView,
   PIN_LOCK_MINUTES,
   UNLOCK_HOURS,
+  editEndsUnlocks,
   type Media,
   type Move,
   type MoveDetail,
@@ -258,6 +259,7 @@ export function createMockApi(opts: MockOptions = {}): Api {
       await delay();
       const t = ownTag(tagId);
       Object.assign(t, applyTagInput(t, input, t.ownerId));
+      if (editEndsUnlocks(tagInputSchema.parse(input))) db.unlocks = db.unlocks.filter((u) => u.tagId !== t.id); // #60
       save();
       return toTag(t);
     },

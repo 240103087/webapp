@@ -81,6 +81,7 @@ export interface Store {
 
   insertUnlock(u: UnlockRow): Promise<void>;
   getUnlock(token: string): Promise<UnlockRow | null>;
+  deleteUnlocks(tagId: string): Promise<void>;
 
   /** True when there are no users (used to decide whether to seed). */
   isEmpty(): Promise<boolean>;
