@@ -45,9 +45,10 @@ ideas from: https://trustmrr.com/
 
 ## Part 2. Picking the idea
 
-**Assistant:** Part I was Bolis, a trip expense splitter that lived only in
-the browser. Part II should be different: a real server and database, more
-than one person touching the same data, and real rules, not just CRUD.
+**Assistant:** Part I was Qobdisha
+([240103087/qobdisha-ai](https://github.com/240103087/qobdisha-ai)).
+Part II should be a different app: a real server and database, more than
+one person touching the same data, and real rules, not just CRUD.
 Three ideas:
 
 - A) **Tabys** - a TrustMRR-style marketplace for small profitable online
