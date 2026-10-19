@@ -1,5 +1,6 @@
 import { BrowserRouter } from "react-router-dom";
 import { ToastProvider } from "./ui/Toast";
+import { AuthProvider } from "./auth/AuthContext";
 import { AppRoutes } from "./routes";
 import "./styles/tokens.css";
 import "./styles/base.css";
@@ -10,7 +11,9 @@ export function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
-        <AppRoutes />
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
       </ToastProvider>
     </BrowserRouter>
   );
