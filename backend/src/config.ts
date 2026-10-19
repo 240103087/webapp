@@ -33,7 +33,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     databaseUrl: env.DATABASE_URL ?? `file:${path.join(REPO_ROOT, "backend/data/moveeasy.db")}`,
     seed: env.SEED !== "0",
     migrate: env.MIGRATE !== "0",
-    staticDir: env.STATIC_DIR ? path.resolve(env.STATIC_DIR) : null,
+    // Relative paths are taken from the repository root, so `STATIC_DIR=frontend/dist` works from any workspace.
+    staticDir: env.STATIC_DIR ? path.resolve(REPO_ROOT, env.STATIC_DIR) : null,
     log: env.NODE_ENV !== "test" && env.LOG !== "0",
   };
 }
