@@ -54,3 +54,16 @@ export function pinAttemptState(
   }
   return { attemptsLeft: PIN_MAX_ATTEMPTS - recent.length, lockedUntil: null };
 }
+
+/** A visitor's repeat views of the same tag within this window count as one scan. */
+export const SCAN_DEDUPE_MINUTES = 30;
+
+/**
+ * Whether a view should be counted as a new scan: not if the same visitor
+ * already has a scan of this tag in the last `SCAN_DEDUPE_MINUTES`.
+ * `scans` are the earlier scans of this one tag.
+ */
+export function shouldCountScan(scans: { visitorId: string | null; at: string }[], visitorId: string, now: Date): boolean {
+  const since = now.getTime() - SCAN_DEDUPE_MINUTES * 60_000;
+  return !scans.some((s) => s.visitorId === visitorId && Date.parse(s.at) > since);
+}

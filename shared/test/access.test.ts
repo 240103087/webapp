@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { generateCode, formatCode, normalizeCode, CODE_ALPHABET } from "../src/codes";
-import { visitorView, pinAttemptState, type AccessTag } from "../src/access";
+import { visitorView, pinAttemptState, shouldCountScan, type AccessTag } from "../src/access";
 
 describe("codes", () => {
   it("generates 8 characters from the alphabet without look-alikes", () => {
@@ -70,5 +70,23 @@ describe("pinAttemptState", () => {
     const r = pinAttemptState([ago(5), ago(4), ago(3), ago(2), ago(1)], now);
     expect(r.attemptsLeft).toBe(0);
     expect(r.lockedUntil).toBe(new Date(now.getTime() + 14 * 60_000).toISOString());
+  });
+});
+
+describe("shouldCountScan (#56)", () => {
+  const now = new Date("2026-10-19T12:00:00Z");
+  const at = (min: number) => new Date(now.getTime() - min * 60_000).toISOString();
+  it("counts the first view", () => {
+    expect(shouldCountScan([], "v1", now)).toBe(true);
+  });
+  it("does not count the same visitor again within 30 minutes", () => {
+    expect(shouldCountScan([{ visitorId: "v1", at: at(0) }], "v1", now)).toBe(false);
+    expect(shouldCountScan([{ visitorId: "v1", at: at(29) }], "v1", now)).toBe(false);
+  });
+  it("counts the same visitor again after 30 minutes", () => {
+    expect(shouldCountScan([{ visitorId: "v1", at: at(31) }], "v1", now)).toBe(true);
+  });
+  it("counts another visitor, and ignores old scans without a visitor id", () => {
+    expect(shouldCountScan([{ visitorId: "v1", at: at(1) }, { visitorId: null, at: at(1) }], "v2", now)).toBe(true);
   });
 });

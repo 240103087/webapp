@@ -9,6 +9,7 @@ import {
   moveInputSchema,
   normalizeCode,
   pinAttemptState,
+  shouldCountScan,
   replyInputSchema,
   searchContents,
   signUpSchema,
@@ -408,8 +409,11 @@ export function createMockApi(opts: MockOptions = {}): Api {
       }
       const t = tag!;
       if (!decision.preview) {
-        db.scans.push({ tagId: t.id, at: iso() });
-        save();
+        const visitorId = getVisitorId();
+        if (shouldCountScan(db.scans.filter((x) => x.tagId === t.id), visitorId, now())) {
+          db.scans.push({ tagId: t.id, at: iso(), visitorId });
+          save();
+        }
       }
       return {
         state: "open",
