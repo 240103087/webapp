@@ -16,7 +16,9 @@ through Prisma. See `_docs/plan.md` for the specification.
   directly
 - `e2e/` - Playwright tests against the running app
 - `openapi.yaml` - the API contract. The backend and the HTTP client must
-  match it
+  match it. Each `operationId` is the name of an `Api` method in
+  `frontend/src/api/types.ts`; `backend/test/openapi.test.ts` fails if a
+  method and an operation do not pair up, so change both together
 - `_docs/` - how we work and what we build
 
 ## Documents
