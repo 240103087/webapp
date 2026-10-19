@@ -27,6 +27,18 @@ describe("moves", () => {
     expect(screen.getByRole("heading", { name: "No boxes yet" })).toBeInTheDocument();
   });
 
+  it("subtitle has no stray separator (#58)", async () => {
+    const { router } = renderApp("/moves");
+    await userEvent.click(await screen.findByRole("button", { name: "New move" }));
+    await userEvent.type(screen.getByLabelText("Name"), "Only a name");
+    await userEvent.click(screen.getByRole("button", { name: "Create move" }));
+    const h1 = await screen.findByRole("heading", { level: 1, name: "Only a name" });
+    expect(h1.nextElementSibling).toHaveTextContent(/^0 boxes$/);
+    await router.navigate("/moves/m_astana");
+    const h2 = await screen.findByRole("heading", { level: 1, name: "Almaty → Astana" });
+    expect(h2.nextElementSibling?.textContent).toMatch(/^Abay Ave 52, Almaty → Kabanbay Batyr 11, Astana · .+ · 12 boxes$/);
+  });
+
   it("groups boxes by room, sorted", async () => {
     renderApp("/moves/m_astana");
     await screen.findByRole("heading", { name: "Almaty → Astana" });

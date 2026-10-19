@@ -57,8 +57,11 @@ export function MovePage() {
           <div>
             <h1>{move.name}</h1>
             <p className="muted">
-              {[move.fromAddress, move.toAddress].filter(Boolean).join(" → ")}
-              {move.date ? ` · ${formatDate(move.date)}` : ""} · <strong>{move.boxCount} {move.boxCount === 1 ? "box" : "boxes"}</strong>
+              {[[move.fromAddress, move.toAddress].filter(Boolean).join(" → "), move.date ? formatDate(move.date) : ""]
+                .filter(Boolean)
+                .map((part) => `${part} · `)
+                .join("")}
+              <strong>{move.boxCount} {move.boxCount === 1 ? "box" : "boxes"}</strong>
             </p>
           </div>
           <div className="row">
