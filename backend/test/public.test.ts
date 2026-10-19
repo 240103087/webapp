@@ -94,4 +94,27 @@ describe("public API (#28)", () => {
     await request(app).get("/api/public/tags/D8RW5TQN").set(V1); // PIN form, not a scan
     expect(await dombra()).toBe(locked);
   });
+
+  it("a new PIN or leaving PIN privacy ends earlier unlocks; keeping the PIN does not (#60)", async () => {
+    const { app } = await testApp();
+    const auth = await loginHeader(app);
+    const dombra = { kind: "keepsake", title: "Grandpa Serik's dombra", message: "Do not glue it.", theme: "sage", privacy: "pin" };
+    const unlockWith = async (pin: string) => (await request(app).post("/api/public/tags/D8RW5TQN/unlock").set(V2).send({ pin })).body.accessToken as string;
+    const view = async (token: string) => (await request(app).get("/api/public/tags/D8RW5TQN").set({ ...V2, "X-Unlock-Token": token })).body.state;
+    const save = (input: object) => request(app).put("/api/tags/t_dombra").set(auth).send(input).expect(200);
+
+    let token = await unlockWith("1971");
+    await save({ ...dombra, title: "Dombra" }); // PIN kept
+    expect(await view(token)).toBe("open");
+
+    await save({ ...dombra, pin: "5555" }); // new PIN
+    expect(await view(token)).toBe("pinRequired");
+    expect((await request(app).post("/api/public/tags/D8RW5TQN/unlock").set(V2).send({ pin: "1971" })).status).toBe(403);
+    token = await unlockWith("5555");
+    expect(await view(token)).toBe("open");
+
+    await save({ ...dombra, privacy: "public" });
+    await save({ ...dombra, pin: "5555" }); // back to PIN, even with the same digits
+    expect(await view(token)).toBe("pinRequired");
+  });
 });

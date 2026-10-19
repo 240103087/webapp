@@ -1,6 +1,6 @@
 import { Router, type Request } from "express";
 import { z } from "zod";
-import { TAG_KINDS, generateCode, tagInputSchema } from "@moveeasy/shared";
+import { TAG_KINDS, editEndsUnlocks, generateCode, tagInputSchema } from "@moveeasy/shared";
 import type { AppDeps } from "../app";
 import { HttpError, notFound } from "../errors";
 import { hashSecret } from "../hash";
@@ -92,6 +92,7 @@ export function tagRoutes(deps: AppDeps): Router {
     const { tag } = await ownTag(deps, req);
     const updated: TagRow = { ...tag, ...(await applyInput(tag, req.body, tag.ownerId)) };
     await store.updateTag(updated);
+    if (editEndsUnlocks(tagInputSchema.parse(req.body))) await store.deleteUnlocks(tag.id);
     res.json(await toTag(deps, updated));
   }));
 

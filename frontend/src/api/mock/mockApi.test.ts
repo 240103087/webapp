@@ -188,4 +188,26 @@ describe("mock api", () => {
     expect(media.map((m) => m.id)).toContain(m1.id);
     expect(media.map((m) => m.id)).not.toContain(m2.id);
   });
+
+  it("a new PIN or leaving PIN privacy ends earlier unlocks; keeping the PIN does not (#60)", async () => {
+    const api = make();
+    const dombra = { kind: "keepsake" as const, title: "Grandpa Serik's dombra", message: "Do not glue it.", privacy: "pin" as const };
+    const state = async () => (await api.getPublicTag("D8RW5TQN")).state;
+    const asOwner = async (fn: () => Promise<unknown>) => {
+      await api.logIn({ email: "aigerim@example.com", password: "password123" });
+      await fn();
+      await api.logOut();
+    };
+    await api.unlockTag("D8RW5TQN", "1971");
+    await asOwner(() => api.updateTag("t_dombra", { ...dombra, title: "Dombra" }));
+    expect(await state()).toBe("open");
+    await asOwner(() => api.updateTag("t_dombra", { ...dombra, pin: "5555" }));
+    expect(await state()).toBe("pinRequired");
+    expect((await err(api.unlockTag("D8RW5TQN", "1971"))).status).toBe(403);
+    await api.unlockTag("D8RW5TQN", "5555");
+    expect(await state()).toBe("open");
+    await asOwner(() => api.updateTag("t_dombra", { ...dombra, privacy: "public" }));
+    await asOwner(() => api.updateTag("t_dombra", { ...dombra, pin: "5555" }));
+    expect(await state()).toBe("pinRequired");
+  });
 });

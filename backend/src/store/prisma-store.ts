@@ -100,6 +100,7 @@ export class PrismaStore implements Store {
   async clearPinFailures(tagId: string, visitorId: string) { await this.db.pinFailure.deleteMany({ where: { tagId, visitorId } }); }
 
   async insertUnlock(u: UnlockRow) { await this.db.unlock.create({ data: { ...u, expiresAt: d(u.expiresAt) } }); }
+  async deleteUnlocks(tagId: string) { await this.db.unlock.deleteMany({ where: { tagId } }); }
   async getUnlock(token: string) { const u = await this.db.unlock.findUnique({ where: { token } }); return u && { ...u, expiresAt: s(u.expiresAt) }; }
 
   async isEmpty() { return (await this.db.user.count()) === 0; }

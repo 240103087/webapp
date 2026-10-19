@@ -39,6 +39,14 @@ export const PIN_LOCK_MINUTES = 15;
 export const UNLOCK_HOURS = 24;
 
 /**
+ * Saving a tag ends every earlier PIN unlock when it stops being PIN-protected or a new PIN is set,
+ * so an owner can shut out people who learned the old PIN (#60). Keeping the PIN keeps the unlocks.
+ */
+export function editEndsUnlocks(input: { privacy: string; pin?: string | null }): boolean {
+  return input.privacy !== "pin" || !!input.pin;
+}
+
+/**
  * PIN attempts inside the window. Returns how many are left and, when
  * locked, until when.
  */

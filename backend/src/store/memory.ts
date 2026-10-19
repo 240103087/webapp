@@ -86,6 +86,7 @@ export class MemoryStore implements Store {
 
   async insertUnlock(u: UnlockRow) { this.unlocks.push(copy(u)); }
   async getUnlock(token: string) { return copy(this.unlocks.find((u) => u.token === token) ?? null); }
+  async deleteUnlocks(tagId: string) { this.unlocks = this.unlocks.filter((u) => u.tagId !== tagId); }
 
   async isEmpty() { return this.users.length === 0; }
   async close() {}
