@@ -1,0 +1,35 @@
+.print-layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .print-layout { grid-template-columns: minmax(0, 1fr); } }
+.pick-list { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.pick { display: flex; gap: 10px; align-items: center; padding: 8px 10px; min-height: 44px; cursor: pointer; border-bottom: 1px solid var(--line); }
+.pick input { width: 18px; height: 18px; accent-color: var(--ink); }
+.pick span:first-of-type { flex: 1; }
+.sheets { display: flex; flex-direction: column; gap: 24px; overflow-x: auto; padding-bottom: 8px; }
+.sheet { width: 210mm; min-height: 297mm; background: #fff; box-shadow: var(--shadow); border: 1px solid var(--line); padding: 10mm 15mm; color: #000; flex-shrink: 0; }
+.sheet-grid { display: grid; gap: 0; }
+.label { border: 0.3mm dashed #999; padding: 3mm; display: flex; gap: 3mm; align-items: center; overflow: hidden; break-inside: avoid; font-family: var(--font-body); }
+.label-S { flex-direction: column; justify-content: center; text-align: center; gap: 1mm; }
+.label-M { flex-direction: column; justify-content: center; text-align: center; gap: 2mm; }
+.label-text { display: flex; flex-direction: column; gap: 0.5mm; min-width: 0; }
+.label-box { font-weight: 700; font-size: 16pt; border: 0.6mm solid #000; padding: 0 2mm; align-self: center; }
+.label-L .label-box { font-size: 32pt; align-self: flex-start; }
+.label-room { font-weight: 700; font-size: 11pt; }
+.label-L .label-room { font-size: 20pt; }
+.label-title { font-size: 9pt; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.label-L .label-title { font-size: 14pt; white-space: normal; }
+.label-code { font-size: 8pt; letter-spacing: 0.08em; }
+.label-L .label-code { font-size: 12pt; }
+.label-fragile { background: #000; color: #fff; font-weight: 700; letter-spacing: 0.15em; font-size: 9pt; padding: 0.5mm 2mm; align-self: center; }
+.label-L .label-fragile { font-size: 16pt; align-self: flex-start; }
+.label-S .label-box { font-size: 11pt; }
+.label-S .label-title, .label-S .label-room { font-size: 8pt; }
+@page { size: A4; margin: 0; }
+@media print {
+  body { background: #fff; }
+  .topbar, .no-print, .skip-link, .toasts { display: none !important; }
+  .container { padding: 0; max-width: none; }
+  .print-layout { display: block; }
+  .sheets { gap: 0; overflow: visible; }
+  .sheet { box-shadow: none; border: 0; page-break-after: always; break-after: page; }
+  .sheet:last-child { page-break-after: auto; break-after: auto; }
+}
