@@ -1,0 +1,26 @@
+.skip-link { position: absolute; left: -9999px; top: 8px; background: var(--ink); color: #fff; padding: 8px 12px; border-radius: 8px; z-index: 100; }
+.skip-link:focus { left: 8px; }
+.topbar { background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; }
+.topbar-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; min-height: 64px; display: flex; align-items: center; gap: 24px; }
+.logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+.logo-text { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: -0.02em; }
+.logo:hover { color: var(--ink); }
+.nav { display: flex; align-items: center; gap: 4px; flex: 1; }
+.nav-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm); color: var(--ink-muted); text-decoration: none; font-weight: 700; }
+.nav-link:hover { background: var(--kraft-tint); color: var(--ink); }
+.nav-link[aria-current="page"] { color: var(--ink); background: var(--kraft-tint); }
+.nav-user { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.menu-toggle { display: none; margin-left: auto; }
+main:focus { outline: none; }
+@media (max-width: 760px) {
+  .topbar-inner { padding: 0 16px; gap: 12px; flex-wrap: wrap; }
+  .menu-toggle { display: inline-flex; }
+  .nav { display: none; flex-basis: 100%; flex-direction: column; align-items: stretch; padding-bottom: 12px; }
+  .nav-open { display: flex; }
+  .nav-user { margin-left: 0; border-top: 1px solid var(--line); padding-top: 8px; flex-direction: column; align-items: stretch; }
+}
+.user-menu { position: relative; }
+.user-menu-list { position: absolute; right: 0; top: calc(100% + 6px); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); min-width: 220px; padding: 8px; display: flex; flex-direction: column; z-index: 30; }
+.user-menu-list .who { padding: 8px 12px; border-bottom: 1px solid var(--line); margin-bottom: 4px; font-size: 14px; }
+.user-menu-list button { justify-content: flex-start; }
+@media (max-width: 760px) { .user-menu-list { position: static; box-shadow: none; border: 0; padding: 0; } }
