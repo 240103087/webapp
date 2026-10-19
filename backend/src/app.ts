@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import { loadConfig, type Config } from "./config";
 import { apiNotFound, errorHandler } from "./errors";
 import { FileStore, UrlSigner } from "./files";
+import { authRoutes } from "./routes/auth";
 import { MemoryStore } from "./store/memory";
 import { seedStore } from "./store/seed";
 import type { Store } from "./store/types";
@@ -44,6 +45,8 @@ export function createApp(deps: AppDeps): Express {
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true });
   });
+
+  app.use("/api", authRoutes(deps));
 
   app.use("/api", apiNotFound);
   app.use(errorHandler);
