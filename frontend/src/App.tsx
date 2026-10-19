@@ -1,4 +1,4 @@
-import { BrowserRouter } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ToastProvider } from "./ui/Toast";
 import { AuthProvider } from "./auth/AuthContext";
 import { AppRoutes } from "./routes";
@@ -7,15 +7,20 @@ import "./styles/base.css";
 import "./styles/ui.css";
 import "./styles/layout.css";
 import "./styles/dashboard.css";
+import "./styles/editor.css";
+
+export function Root() {
+  return (
+    <ToastProvider>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </ToastProvider>
+  );
+}
+
+const router = createBrowserRouter([{ path: "*", element: <Root /> }]);
 
 export function App() {
-  return (
-    <BrowserRouter>
-      <ToastProvider>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </ToastProvider>
-    </BrowserRouter>
-  );
+  return <RouterProvider router={router} />;
 }
