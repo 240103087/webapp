@@ -62,3 +62,4 @@
 .reply-form .textarea { min-height: 96px; }
 .reply-ok { font-weight: 700; color: #1f6f6b; }
 .theme-night .reply-ok { color: #9fe0d8; }
+.public-footer a, .preview-banner a { display: inline-flex; align-items: center; min-height: 44px; }

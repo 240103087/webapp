@@ -37,3 +37,4 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .container { padding: 16px; }
   h1 { font-size: 26px; }
 }
+audio:focus, video:focus { outline: 3px solid var(--focus); outline-offset: 2px; }

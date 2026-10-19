@@ -1,8 +1,8 @@
-.skip-link { position: absolute; left: -9999px; top: 8px; background: var(--ink); color: #fff; padding: 8px 12px; border-radius: 8px; z-index: 100; }
+.skip-link { position: absolute; left: -9999px; top: 8px; min-height: 44px; display: inline-flex; align-items: center; background: var(--ink); color: #fff; padding: 8px 12px; border-radius: 8px; z-index: 100; }
 .skip-link:focus { left: 8px; }
 .topbar { background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; }
 .topbar-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; min-height: 64px; display: flex; align-items: center; gap: 24px; }
-.logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+.logo { display: inline-flex; align-items: center; min-height: 44px; gap: 10px; text-decoration: none; color: var(--ink); }
 .logo-text { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: -0.02em; }
 .logo:hover { color: var(--ink); }
 .nav { display: flex; align-items: center; gap: 4px; flex: 1; }
