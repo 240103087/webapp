@@ -1,0 +1,25 @@
+:root {
+  --ground: #fbfaf7;
+  --surface: #ffffff;
+  --ink: #1b1a17;
+  --ink-muted: #5f5a52;
+  --line: #e7e2d9;
+  --line-strong: #d3ccbf;
+  --accent: #c63b23;
+  --accent-hover: #ab311c;
+  --accent-ink: #b5361f;
+  --kraft: #c9a774;
+  --kraft-tint: #f3ebdd;
+  --kraft-ink: #6b5428;
+  --teal: #1f6f6b;
+  --teal-tint: #e2f0ee;
+  --danger-tint: #fbe3de;
+  --gift-ink: #a8321e;
+  --focus: #1f6f6b;
+  --shadow: 0 6px 24px rgba(27, 26, 23, 0.08);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font-display: "Bricolage Grotesque", "Atkinson Hyperlegible", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
