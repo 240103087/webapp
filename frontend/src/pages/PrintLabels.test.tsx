@@ -2,6 +2,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, beforeEach } from "vitest";
 import { loginAs, renderApp } from "../test/render";
+import printCss from "../styles/print.css?raw";
 
 beforeEach(async () => {
   await loginAs();
@@ -34,5 +35,14 @@ describe("print labels", () => {
     expect(screen.getAllByTestId("label")).toHaveLength(1);
     expect(screen.queryByRole("checkbox", { name: /Teacher's day/ })).not.toBeInTheDocument();
     expect(await screen.findByRole("img", { name: "QR code for Keys to your first home" })).toBeInTheDocument();
+  });
+
+  it("printed labels use their own class, so form headings are not styled as labels (#55)", async () => {
+    renderApp("/print?move=m_astana");
+    const labels = await screen.findAllByTestId("label");
+    for (const l of labels) expect(l).toHaveClass("print-label");
+    expect(document.querySelectorAll(".label.print-label, legend.print-label")).toHaveLength(0);
+    // No selector in print.css may target the shared `.label` class used by forms.
+    expect(printCss).not.toMatch(/\.label\b/);
   });
 });
