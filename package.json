@@ -1,0 +1,19 @@
+{
+  "name": "moveeasy-memory-tags",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["shared", "frontend", "backend", "e2e"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,magenta \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "dev:mock": "npm run dev:mock -w frontend",
+    "test": "npm test -w shared && npm test -w frontend && npm test -w backend",
+    "build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend",
+    "start": "npm start -w backend",
+    "e2e": "npm test -w e2e"
+  },
+  "devDependencies": {
+    "concurrently": "9.1.0",
+    "typescript": "5.6.3"
+  }
+}
