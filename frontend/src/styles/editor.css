@@ -36,3 +36,24 @@ legend.label { font-weight: 700; font-size: 14px; padding: 0; margin-bottom: 6px
 .theme-swatch:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
 .theme-aa { font-family: var(--font-display); font-size: 22px; font-weight: 700; }
 .theme-name { font-size: 13px; font-weight: 700; }
+.dropzone { border: 2px dashed var(--line-strong); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; background: var(--ground); color: var(--ink-muted); }
+.dropzone p { color: var(--ink); }
+.dropzone .muted { color: var(--ink-muted); }
+.dropzone-on { border-color: var(--teal); background: var(--teal-tint); }
+.dropzone-full { opacity: 0.8; }
+.uploads { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.uploads li { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+.upload-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+.uploads progress { flex: 1; min-width: 120px; accent-color: var(--teal); }
+.media-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.media-item { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; background: var(--surface); }
+.media-audio { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; align-items: center; }
+.media-audio .media-preview { padding: 12px; flex: 1 1 260px; }
+.media-audio audio { width: 100%; }
+.media-preview img, .video-thumb video { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #222; }
+.video-thumb { position: relative; }
+.play-badge { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; pointer-events: none; }
+.play-badge svg { background: rgba(0,0,0,.55); border-radius: 50%; padding: 10px; width: 44px; height: 44px; }
+.media-meta { padding: 8px; display: flex; flex-direction: column; gap: 4px; flex: 1 1 220px; }
+.media-meta .input { min-height: 40px; font-size: 14px; }
+.media-actions { gap: 0; }
