@@ -3,6 +3,7 @@ import { loadConfig, type Config } from "./config";
 import { apiNotFound, errorHandler } from "./errors";
 import { FileStore, UrlSigner } from "./files";
 import { authRoutes } from "./routes/auth";
+import { mediaRoutes } from "./routes/media";
 import { tagRoutes } from "./routes/tags";
 import { MemoryStore } from "./store/memory";
 import { seedStore } from "./store/seed";
@@ -49,6 +50,7 @@ export function createApp(deps: AppDeps): Express {
 
   app.use("/api", authRoutes(deps));
   app.use("/api", tagRoutes(deps));
+  app.use("/api", mediaRoutes(deps));
 
   app.use("/api", apiNotFound);
   app.use(errorHandler);
