@@ -7,6 +7,7 @@ import { mediaRoutes } from "./routes/media";
 import { moveRoutes } from "./routes/moves";
 import { publicRoutes } from "./routes/public";
 import { replyRoutes } from "./routes/replies";
+import { statsRoutes } from "./routes/stats";
 import { tagRoutes } from "./routes/tags";
 import { MemoryStore } from "./store/memory";
 import { seedStore } from "./store/seed";
@@ -57,6 +58,7 @@ export function createApp(deps: AppDeps): Express {
   app.use("/api", publicRoutes(deps));
   app.use("/api", replyRoutes(deps));
   app.use("/api", moveRoutes(deps));
+  app.use("/api", statsRoutes(deps));
 
   app.use("/api", apiNotFound);
   app.use(errorHandler);
