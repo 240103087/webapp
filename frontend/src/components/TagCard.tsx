@@ -3,6 +3,7 @@ import { formatBoxNumber, formatCode } from "@moveeasy/shared";
 import type { Tag } from "../api/types";
 import { KindBadge, KindIcon, PrivacyBadge, TimeLockBadge } from "../ui/Badge";
 import { IconMessage, IconScan } from "../ui/icons";
+import { TagCardMenu } from "./TagActions";
 
 export function TagThumb({ tag }: { tag: Pick<Tag, "kind" | "coverUrl" | "boxNumber" | "title"> }) {
   if (tag.coverUrl) return <img className="thumb" src={tag.coverUrl} alt="" loading="lazy" />;
@@ -13,10 +14,10 @@ export function TagThumb({ tag }: { tag: Pick<Tag, "kind" | "coverUrl" | "boxNum
   );
 }
 
-export function TagCard({ tag }: { tag: Tag }) {
+export function TagCard({ tag, onChanged }: { tag: Tag; onChanged?: () => void }) {
   const locked = tag.opensAt && Date.parse(tag.opensAt) > Date.now();
   return (
-    <article className="tag-card">
+    <article className={`tag-card ${tag.status === "archived" ? "tag-card-archived" : ""}`}>
       <Link to={`/tags/${tag.id}`} className="tag-card-link">
         <TagThumb tag={tag} />
         <div className="tag-card-body">
@@ -49,6 +50,7 @@ export function TagCard({ tag }: { tag: Tag }) {
           </div>
         </div>
       </Link>
+      {onChanged && <TagCardMenu tag={tag} onChanged={onChanged} />}
     </article>
   );
 }

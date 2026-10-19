@@ -41,3 +41,14 @@ div.thumb-box { background: repeating-linear-gradient(90deg, var(--kraft) 0 46%,
   .toolbar-selects .select { min-width: 0; flex: 1; }
   .toolbar-selects { width: 100%; }
 }
+
+/* Card menu (#20) */
+.tag-card { position: relative; }
+.tag-card-archived .thumb { filter: grayscale(0.8); opacity: 0.75; }
+.card-menu { position: absolute; top: 8px; right: 8px; }
+.card-menu-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.card-menu-btn:hover { background: var(--kraft-tint); }
+.card-menu-list { position: absolute; right: 0; top: 48px; z-index: 5; min-width: 160px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 4px; display: flex; flex-direction: column; }
+.card-menu-list button { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 0; background: transparent; text-align: left; font: inherit; color: var(--ink); border-radius: 8px; cursor: pointer; }
+.card-menu-list button:hover, .card-menu-list button:focus-visible { background: var(--kraft-tint); }
+.card-menu-list .danger { color: var(--accent-ink); }

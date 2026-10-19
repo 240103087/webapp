@@ -15,6 +15,9 @@ interface Props {
 /** Modal confirm with a focus trap; Escape cancels and focus returns to the opener. */
 export function ConfirmDialog({ open, title, children, confirmLabel, danger, busy, onConfirm, onCancel }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  // Keep the latest onCancel without re-running the effect, so focus is not reset on every render.
+  const cancelRef = useRef(onCancel);
+  cancelRef.current = onCancel;
   useEffect(() => {
     if (!open) return;
     const opener = document.activeElement as HTMLElement | null;
@@ -22,7 +25,7 @@ export function ConfirmDialog({ open, title, children, confirmLabel, danger, bus
     const focusables = () => Array.from(node.querySelectorAll<HTMLElement>("button:not([disabled])"));
     focusables()[0]?.focus();
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") { e.preventDefault(); onCancel(); }
+      if (e.key === "Escape") { e.preventDefault(); cancelRef.current(); }
       if (e.key === "Tab") {
         const f = focusables();
         if (f.length === 0) return;
@@ -33,7 +36,7 @@ export function ConfirmDialog({ open, title, children, confirmLabel, danger, bus
     }
     document.addEventListener("keydown", onKey);
     return () => { document.removeEventListener("keydown", onKey); opener?.focus?.(); };
-  }, [open, onCancel]);
+  }, [open]);
   if (!open) return null;
   return (
     <div className="dialog-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
@@ -42,7 +45,7 @@ export function ConfirmDialog({ open, title, children, confirmLabel, danger, bus
         {children && <div className="muted">{children}</div>}
         <div className="dialog-actions">
           <Button onClick={onCancel}>Cancel</Button>
-          <Button variant={danger ? "primary" : "primary"} onClick={onConfirm} busy={busy} busyLabel="Working...">
+          <Button variant="primary" onClick={onConfirm} busy={busy} busyLabel="Working...">
             {confirmLabel}
           </Button>
         </div>
