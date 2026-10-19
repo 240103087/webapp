@@ -7,6 +7,7 @@ import { ButtonLink } from "../ui/Button";
 import { KindBadge, PrivacyBadge, TimeLockBadge, formatDateTime } from "../ui/Badge";
 import { IconEdit, IconExternal } from "../ui/icons";
 import { useTitle } from "../ui/useTitle";
+import { MediaManager } from "../components/MediaManager";
 
 export function TagDetail() {
   const { id } = useParams();
@@ -65,6 +66,7 @@ export function TagDetail() {
             )}
             {tag.kind === "box" && tag.message && <p className="prewrap muted">{tag.message}</p>}
           </section>
+          <MediaManager tag={tag} onChange={(media) => setTag((t) => (t ? { ...t, media } : t))} />
         </div>
         <aside className="stack detail-side" aria-label="Tag details">
           <section className="card stack">
