@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { describe, it, expect } from "vitest";
 import { PrismaClient } from "@prisma/client";
-import { migrate } from "../src/db-cli";
+import { migrate } from "../src/migrate";
 
 describe("database schema (#33)", () => {
   it("migrations create every table on an empty SQLite file", async () => {

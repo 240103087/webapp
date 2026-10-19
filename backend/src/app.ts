@@ -31,8 +31,13 @@ export async function buildDeps(config: Config = loadConfig(), now: () => Date =
 }
 
 async function openStore(config: Config): Promise<Store> {
-  if (config.store === "prisma") throw new Error("STORE=prisma arrives in #34");
-  return new MemoryStore();
+  if (config.store === "memory") return new MemoryStore();
+  if (config.migrate) {
+    const { migrate } = await import("./migrate");
+    migrate(config.databaseUrl);
+  }
+  const { PrismaStore } = await import("./store/prisma-store");
+  return PrismaStore.open(config.databaseUrl);
 }
 
 export function createApp(deps: AppDeps): Express {

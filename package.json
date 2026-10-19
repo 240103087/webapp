@@ -11,7 +11,8 @@
     "build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend",
     "start": "npm start -w backend",
     "e2e": "npm test -w e2e",
-    "db:migrate": "npm run db:migrate -w backend"
+    "db:migrate": "npm run db:migrate -w backend",
+    "db:seed": "npm run db:seed -w backend"
   },
   "devDependencies": {
     "concurrently": "9.1.0",
