@@ -1,6 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, beforeEach, beforeAll } from "vitest";
+import { describe, it, expect, beforeEach, beforeAll, vi } from "vitest";
 import { api } from "../api";
 import { loginAs, renderApp } from "../test/render";
 
@@ -65,5 +65,17 @@ describe("media", () => {
     await userEvent.upload(input, files, { applyAccept: false });
     expect(await screen.findByText("A tag can have at most 20 media files")).toBeInTheDocument();
     await screen.findByText("20 / 20");
+  });
+
+  it("uploading two files at once logs no React warnings (#52)", async () => {
+    const spy = vi.spyOn(console, "error");
+    renderApp("/tags/t_birthday");
+    const input = await screen.findByLabelText("Add photos, videos or audio");
+    await userEvent.upload(input, [file("a.png", "image/png", 2000), file("b.png", "image/png", 2000)]);
+    expect(await screen.findByLabelText("Caption for item 3")).toBeInTheDocument();
+    expect(screen.getAllByRole("img", { hidden: true }).length).toBeGreaterThan(0);
+    expect((await api.getTag("t_birthday")).media).toHaveLength(3);
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
   });
 });

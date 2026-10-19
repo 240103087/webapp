@@ -19,7 +19,10 @@ export function MediaManager({ tag, onChange }: { tag: Tag; onChange: (media: Me
   const input = useRef<HTMLInputElement>(null);
   const toast = useToast();
 
+  const listRef = useRef<Media[]>(media);
+  listRef.current = media;
   const update = (list: Media[]) => {
+    listRef.current = list;
     setMedia(list);
     onChange(list);
   };
@@ -45,11 +48,9 @@ export function MediaManager({ tag, onChange }: { tag: Tag; onChange: (media: Me
           const m = await api.uploadMedia(tag.id, file, { onProgress: (p) => setUploads((u) => u.map((x) => (x.key === key ? { ...x, progress: p } : x))) });
           added.push(m);
           setUploads((u) => u.filter((x) => x.key !== key));
-          setMedia((list) => {
-            const next = [...list, m].sort((a, b) => a.position - b.position);
-            onChange(next);
-            return next;
-          });
+          // Keep the latest list in a ref so parallel uploads add up, then update state and the parent separately.
+          listRef.current = [...listRef.current, m].sort((a, b) => a.position - b.position);
+          update(listRef.current);
         } catch (e) {
           setUploads((u) => u.map((x) => (x.key === key ? { ...x, error: e instanceof ApiError ? e.message : "Upload failed. Check your connection." } : x)));
         }
