@@ -1,27 +1,26 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
 import express from "express";
-import { createApp } from "../src/app";
 import { HttpError } from "../src/errors";
-import { testConfig } from "./helpers";
+import { testApp } from "./helpers";
 
-const app = () => createApp({ config: testConfig(), now: () => new Date() });
+const app = async () => (await testApp({ config: { seed: false } })).app;
 
 describe("skeleton (#23)", () => {
   it("answers the health check", async () => {
-    const res = await request(app()).get("/api/health");
+    const res = await request(await app()).get("/api/health");
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ ok: true });
   });
 
   it("unknown api route is a 404 in the error format", async () => {
-    const res = await request(app()).get("/api/nope");
+    const res = await request(await app()).get("/api/nope");
     expect(res.status).toBe(404);
-    expect(res.body).toEqual({ code: "not_found", message: "No route GET /nope" });
+    expect(res.body).toEqual({ code: "not_found", message: "No route GET /api/nope" });
   });
 
   it("bad JSON is a 400 in the error format", async () => {
-    const res = await request(app()).post("/api/nope").set("Content-Type", "application/json").send("{oops");
+    const res = await request(await app()).post("/api/nope").set("Content-Type", "application/json").send("{oops");
     expect(res.status).toBe(400);
     expect(res.body.code).toBe("bad_json");
   });
