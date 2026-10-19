@@ -133,14 +133,14 @@ export function PrintLabels() {
               <div key={pi} className="sheet" data-testid="sheet">
                 <div className="sheet-grid" style={{ gridTemplateColumns: `repeat(${spec.cols}, ${spec.w}mm)`, gridAutoRows: `${spec.h}mm` }}>
                   {page.map((t) => (
-                    <div key={t.id} className={`label label-${size}`} data-testid="label">
+                    <div key={t.id} className={`print-label print-label-${size}`} data-testid="label">
                       {qrs[t.code] ? <img src={qrs[t.code]} alt={`QR code for ${t.title}`} style={{ width: `${spec.qr}mm`, height: `${spec.qr}mm` }} /> : <div style={{ width: `${spec.qr}mm`, height: `${spec.qr}mm` }} />}
-                      <div className="label-text">
-                        {t.kind === "box" && t.boxNumber !== null && <div className="label-box mono">{formatBoxNumber(t.boxNumber)}</div>}
-                        {t.kind === "box" && t.room && <div className="label-room">{t.room}</div>}
-                        <div className="label-title">{t.title}</div>
-                        <div className="label-code mono">{formatCode(t.code)}</div>
-                        {t.kind === "box" && t.fragile && <div className="label-fragile">FRAGILE</div>}
+                      <div className="print-label-text">
+                        {t.kind === "box" && t.boxNumber !== null && <div className="print-label-box mono">{formatBoxNumber(t.boxNumber)}</div>}
+                        {t.kind === "box" && t.room && <div className="print-label-room">{t.room}</div>}
+                        <div className="print-label-title">{t.title}</div>
+                        <div className="print-label-code mono">{formatCode(t.code)}</div>
+                        {t.kind === "box" && t.fragile && <div className="print-label-fragile">FRAGILE</div>}
                       </div>
                     </div>
                   ))}
