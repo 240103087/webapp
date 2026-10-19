@@ -1,0 +1,145 @@
+// MoveEasy Memory Tags - database schema (#33).
+// Mirrors the row types in src/store/types.ts. Nothing here is SQLite-specific:
+// to use Postgres, change `provider` and DATABASE_URL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id
+  name         String
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime
+  sessions     Session[]
+  moves        Move[]
+  tags         Tag[]
+}
+
+model Session {
+  token     String   @id
+  userId    String
+  createdAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Move {
+  id            String   @id
+  ownerId       String
+  name          String
+  fromAddress   String?
+  toAddress     String?
+  /// Calendar date, YYYY-MM-DD
+  date          String?
+  /// Highest box number given in this move; numbers are never reused
+  lastBoxNumber Int      @default(0)
+  createdAt     DateTime
+  owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tags          Tag[]
+
+  @@index([ownerId])
+}
+
+model Tag {
+  id           String       @id
+  ownerId      String
+  /// 8 characters, printed in the QR code; never changes
+  code         String       @unique
+  /// gift | box | keepsake (validated in shared/)
+  kind         String
+  title        String
+  recipient    String?
+  message      String
+  theme        String
+  /// public | pin | private
+  privacy      String
+  pinHash      String?
+  opensAt      DateTime?
+  allowReplies Boolean
+  /// active | archived
+  status       String
+  moveId       String?
+  boxNumber    Int?
+  room         String?
+  /// JSON array of strings (SQLite has no arrays)
+  contents     String       @default("[]")
+  fragile      Boolean      @default(false)
+  createdAt    DateTime
+  updatedAt    DateTime
+  owner        User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  move         Move?        @relation(fields: [moveId], references: [id], onDelete: Restrict)
+  media        Media[]
+  replies      Reply[]
+  scans        Scan[]
+  pinFailures  PinFailure[]
+  unlocks      Unlock[]
+
+  @@index([ownerId])
+  @@index([moveId])
+}
+
+model Media {
+  id        String   @id
+  tagId     String
+  /// photo | video | audio
+  type      String
+  mimeType  String
+  size      Int
+  caption   String
+  position  Int
+  /// Path relative to UPLOAD_DIR; the file itself is on disk
+  file      String
+  createdAt DateTime
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@index([tagId, position])
+}
+
+model Reply {
+  id        String   @id
+  tagId     String
+  name      String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@index([tagId, createdAt])
+}
+
+model Scan {
+  id        String   @id
+  tagId     String
+  visitorId String?
+  at        DateTime
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@index([tagId, at])
+}
+
+model PinFailure {
+  id        String   @id
+  tagId     String
+  visitorId String
+  at        DateTime
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@index([tagId, visitorId])
+}
+
+model Unlock {
+  token     String   @id
+  tagId     String
+  expiresAt DateTime
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@index([tagId])
+}
