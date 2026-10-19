@@ -11,7 +11,7 @@
 | Files | disk folder (`UPLOAD_DIR`) | keeps the database small; S3 is a post-MVP issue |
 | QR | `qrcode` | renders PNG and SVG in the browser and in Node |
 | Tests | Vitest, Testing Library, Supertest, Playwright | unit, component, API and real-browser tests |
-| Contract | `openapi.yaml` + Ajv | the backend's responses are checked against the contract in tests |
+| Contract | `openapi.yaml` (OpenAPI 3.0.3), `swagger-parser`, Ajv | the file is validated in `npm test`, its operations are matched to the services-layer methods, and the backend's responses are checked against it (#32) |
 
 Things deliberately not used: a CSS framework (the design comes from the
 Claude Design canvas and is small enough for plain CSS with variables), a
