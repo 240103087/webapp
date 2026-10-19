@@ -36,6 +36,9 @@ export class ApiError extends Error {
   }
 }
 
+/** Fired on `window` when an owner call answers 401: the session is gone. */
+export const SESSION_EXPIRED_EVENT = "moveeasy:unauthorized";
+
 export interface UploadOptions {
   caption?: string;
   onProgress?: (fraction: number) => void;

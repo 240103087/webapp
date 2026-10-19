@@ -4,6 +4,7 @@ import { formatBoxNumber, highlightParts } from "@moveeasy/shared";
 import { api } from "../api";
 import type { MoveSearchHit } from "../api/types";
 import { IconSearch } from "../ui/icons";
+import { LoadError } from "../ui/LoadError";
 
 export function Highlight({ text, query }: { text: string; query: string }) {
   return (
@@ -18,6 +19,8 @@ export function MoveSearch({ moveId }: { moveId: string }) {
   const urlQ = params.get("q") ?? "";
   const [q, setQ] = useState(urlQ);
   const [hits, setHits] = useState<MoveSearchHit[] | null>(null);
+  const [searchError, setSearchError] = useState<unknown>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const h = setTimeout(() => {
@@ -35,9 +38,10 @@ export function MoveSearch({ moveId }: { moveId: string }) {
       return;
     }
     let alive = true;
-    api.searchMove(moveId, urlQ).then((r) => alive && setHits(r)).catch(() => alive && setHits([]));
+    setSearchError(null);
+    api.searchMove(moveId, urlQ).then((r) => alive && setHits(r)).catch((e) => alive && setSearchError(e));
     return () => { alive = false; };
-  }, [moveId, urlQ]);
+  }, [moveId, urlQ, attempt]);
 
   return (
     <section className="move-search" aria-label="Search this move">
@@ -46,7 +50,9 @@ export function MoveSearch({ moveId }: { moveId: string }) {
         <label htmlFor="move-q" className="sr-only">Where is my...</label>
         <input id="move-q" type="search" className="input" placeholder="Where is my... kettle, passport, charger" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
-      {hits !== null && (
+      {searchError ? (
+        <LoadError error={searchError} onRetry={() => setAttempt((n) => n + 1)} />
+      ) : hits !== null && (
         <div aria-live="polite">
           {hits.length === 0 ? (
             <p className="muted search-empty">Nothing found in this move</p>

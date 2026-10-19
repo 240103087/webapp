@@ -9,6 +9,6 @@ import type { Api } from "./types";
  */
 const mode = import.meta.env.MODE === "test" ? "mock" : import.meta.env.VITE_API === "mock" ? "mock" : "http";
 export const api: Api = mode === "mock" ? createMockApi({ latency: import.meta.env.MODE === "test" ? [0, 0] : [150, 400] }) : createHttpApi();
-export { ApiError } from "./types";
+export { ApiError, SESSION_EXPIRED_EVENT } from "./types";
 export type { Api } from "./types";
 export { MOCK_PERSIST_MAX_BYTES } from "./mock/mockApi";
