@@ -7,6 +7,7 @@ import { Button } from "../ui/Button";
 import { useTitle } from "../ui/useTitle";
 import { IconPrinter, IconSearch } from "../ui/icons";
 import { publicUrl, qrSvg, svgDataUrl } from "../components/qr";
+import { LoadError } from "../ui/LoadError";
 import { KIND_LABEL } from "../ui/Badge";
 
 export type LabelSize = "S" | "M" | "L";
@@ -28,12 +29,22 @@ export function PrintLabels() {
   const [filter, setFilter] = useState("");
   const [qrs, setQrs] = useState<Record<string, string>>({});
 
+  const [loadError, setLoadError] = useState<unknown>(null);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    Promise.all([api.listTags(), api.listMoves()]).then(([t, m]) => {
-      setTags(t);
-      setMoves(m);
-    });
-  }, []);
+    let alive = true;
+    setLoadError(null);
+    Promise.all([api.listTags(), api.listMoves()])
+      .then(([t, m]) => {
+        if (!alive) return;
+        setTags(t);
+        setMoves(m);
+      })
+      .catch((e) => alive && setLoadError(e)); // #59: never leave a failed load unhandled
+    return () => {
+      alive = false;
+    };
+  }, [attempt]);
 
   const setParam = (k: string, v: string) => {
     const next = new URLSearchParams(params);
@@ -72,6 +83,9 @@ export function PrintLabels() {
         </div>
         <Button variant="primary" icon={<IconPrinter size={18} />} disabled={selected.length === 0} onClick={() => window.print()}>Print</Button>
       </div>
+      {loadError ? (
+        <LoadError error={loadError} onRetry={() => setAttempt((n) => n + 1)} />
+      ) : (
       <div className="print-layout">
         <aside className="card stack print-controls no-print" aria-label="What to print">
           <div className="field">
@@ -150,6 +164,7 @@ export function PrintLabels() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

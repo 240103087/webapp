@@ -1,12 +1,14 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { api, ApiError } from "../api";
 import { loginAs, renderApp } from "../test/render";
 import printCss from "../styles/print.css?raw";
 
 beforeEach(async () => {
   await loginAs();
 });
+afterEach(() => vi.restoreAllMocks());
 
 describe("print labels", () => {
   it("asks to pick something first", async () => {
@@ -44,5 +46,15 @@ describe("print labels", () => {
     expect(document.querySelectorAll(".label.print-label, legend.print-label")).toHaveLength(0);
     // No selector in print.css may target the shared `.label` class used by forms.
     expect(printCss).not.toMatch(/\.label\b/);
+  });
+
+  it("shows the error with Retry when the tags cannot be loaded (#59)", async () => {
+    const failing = vi.spyOn(api, "listTags").mockRejectedValue(new ApiError(500, { code: "server_error", message: "The server had a problem. Try again in a moment." }));
+    renderApp("/print?move=m_astana");
+    expect(await screen.findByRole("alert")).toHaveTextContent("The server had a problem");
+    expect(screen.queryByText("Pick a move or some tags to print.")).not.toBeInTheDocument();
+    failing.mockRestore();
+    await userEvent.click(screen.getByRole("button", { name: "Retry" }));
+    expect(await screen.findAllByTestId("label")).toHaveLength(12);
   });
 });
