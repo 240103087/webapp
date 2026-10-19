@@ -5,11 +5,12 @@ import type { Media, Tag } from "../api/types";
 import { Button } from "../ui/Button";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { useToast } from "../ui/Toast";
+import { VoiceRecorder } from "./VoiceRecorder";
 import { IconAlert, IconArrowDown, IconArrowUp, IconPlay, IconTrash, IconUpload } from "../ui/icons";
 
 interface Upload { key: string; name: string; progress: number; error?: string }
 
-export function MediaManager({ tag, onChange, extra }: { tag: Tag; onChange: (media: Media[]) => void; extra?: React.ReactNode }) {
+export function MediaManager({ tag, onChange }: { tag: Tag; onChange: (media: Media[]) => void }) {
   const [media, setMedia] = useState<Media[]>(tag.media);
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -129,7 +130,7 @@ export function MediaManager({ tag, onChange, extra }: { tag: Tag; onChange: (me
         <input id="media-input" ref={input} type="file" multiple hidden accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,audio/*"
           onChange={(e) => { void addFiles(Array.from(e.target.files ?? [])); e.target.value = ""; }} disabled={full} />
       </div>
-      {extra}
+      <VoiceRecorder tagId={tag.id} count={media.length} onSaved={(m) => { update([...media, m]); toast.show("Voice message saved"); }} />
 
       {uploads.length > 0 && (
         <ul className="uploads" aria-live="polite">
