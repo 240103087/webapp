@@ -9,7 +9,6 @@
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "db:migrate": "tsx src/db-cli.ts migrate",
-    "db:seed": "tsx src/db-cli.ts seed",
     "postinstall": "prisma generate"
   },
   "dependencies": {
