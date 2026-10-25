@@ -189,7 +189,7 @@ export function createMockApi(opts: MockOptions = {}): Api {
   }
 
   function unlockedFor(tag: TagRow): boolean {
-    const token = getUnlock(tag.code);
+    const token = getUnlock(tag.code, now().getTime());
     return !!token && db.unlocks.some((u) => u.token === token && u.tagId === tag.id && Date.parse(u.expiresAt) > now().getTime());
   }
   function attemptState(tag: TagRow) {
@@ -470,7 +470,7 @@ export function createMockApi(opts: MockOptions = {}): Api {
       db.unlocks.push({ token, tagId: tag.id, expiresAt });
       db.pinFailures = db.pinFailures.filter((f) => !(f.tagId === tag.id && f.visitorId === getVisitorId()));
       save();
-      saveUnlock(tag.code, token, expiresAt);
+      saveUnlock(tag.code, token, expiresAt, now().getTime());
       return { accessToken: token, expiresAt };
     },
     async postReply(rawCode, input) {
