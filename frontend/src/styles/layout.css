@@ -30,3 +30,14 @@ main:focus { outline: none; }
 .auth-tagline { text-align: center; max-width: 440px; }
 .demo-box { background: var(--kraft-tint); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; font-size: 14px; }
 @media (max-width: 600px) { .auth-card { padding: 20px; } }
+
+/* Auth hero illustration (#65) */
+.auth-hero { width: 100%; max-width: 280px; display: flex; justify-content: center; }
+.auth-hero .art { width: 100%; }
+@media (max-width: 600px) { .auth-hero { max-width: 180px; } }
+@media (min-width: 960px) {
+  .auth-page { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 440px); grid-template-areas: "hero card" "hero tag"; justify-content: center; align-content: center; column-gap: 56px; }
+  .auth-hero { grid-area: hero; max-width: 360px; align-self: center; }
+  .auth-card { grid-area: card; }
+  .auth-tagline { grid-area: tag; }
+}

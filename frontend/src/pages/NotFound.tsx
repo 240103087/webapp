@@ -1,11 +1,13 @@
 import { ButtonLink } from "../ui/Button";
 import { useTitle } from "../ui/useTitle";
+import { LostArt } from "../ui/illustrations";
 
 export function NotFound() {
   useTitle("Page not found");
   return (
     <div className="container narrow">
       <div className="empty card">
+        <LostArt />
         <p className="mono muted">404</p>
         <h1>This page does not exist</h1>
         <p>The link may be old, or there is a typo in the address.</p>

@@ -8,10 +8,14 @@ import { TextField } from "../ui/Field";
 import { IconAlert } from "../ui/icons";
 import { Logo } from "../components/Layout";
 import { useTitle } from "../ui/useTitle";
+import { ScanArt } from "../ui/illustrations";
 
 function AuthShell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="auth-page">
+      <div className="auth-hero">
+        <ScanArt />
+      </div>
       <div className="auth-card card">
         <Logo />
         <h1>{title}</h1>

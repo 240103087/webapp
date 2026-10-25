@@ -63,3 +63,7 @@
 .reply-ok { font-weight: 700; color: #1f6f6b; }
 .theme-night .reply-ok { color: #9fe0d8; }
 .public-footer a, .preview-banner a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* Illustrated states (#65) */
+.public-message .art { width: 160px; }
+.theme-night .public-message .art { filter: drop-shadow(0 0 1px rgba(244, 241, 234, 0.6)); }

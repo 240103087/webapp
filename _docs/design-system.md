@@ -99,6 +99,22 @@ Six public-page themes, each a pair (background, ink): `paper`
 Icons: inline stroke SVG, 1.75px stroke, 20px, `currentColor`. No emoji
 in the interface.
 
+Illustrations (#65): flat inline SVG in `frontend/src/ui/illustrations.tsx`,
+2.5px ink outlines with kraft, tomato and teal fills, a soft ground shadow
+and small "+" sparkles. Always decorative (`aria-hidden`, no text inside).
+
+| Illustration | Where |
+|--------------|-------|
+| `KindArt` (gift, box, keepsake) | tag card thumbnail without a photo, empty move |
+| `EmptyTagsArt` | dashboard with no tags |
+| `TruckArt` | Moves with no moves |
+| `LostArt` | 404 page, public page for an unknown code |
+| `SealedArt`, `ArchivedArt` | public page for a private or archived tag |
+| `ScanArt` | log-in and sign-up hero (beside the card from 960px) |
+
+Empty states sit on a dashed card with a kraft glow at the top. Dashboard
+counters carry a small icon in a tinted circle (hidden on phones).
+
 ## Screens
 
 - **Top bar**: logo "MoveEasy" left, nav (Tags, Moves, Print labels),

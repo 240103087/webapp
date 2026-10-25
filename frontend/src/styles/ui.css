@@ -93,3 +93,8 @@
   .btn-sm { min-height: 44px; }
 }
 .input, .select { min-height: 44px; }
+
+/* Illustrations (#65): flat inline SVG, always decorative */
+.art { display: block; max-width: 100%; height: auto; flex-shrink: 0; }
+.empty .art { margin-bottom: 4px; }
+.empty { background: var(--surface) radial-gradient(circle at 50% 0%, var(--kraft-tint), transparent 60%); border-style: dashed; border-color: var(--line-strong); }

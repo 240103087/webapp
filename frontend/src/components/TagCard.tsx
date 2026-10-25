@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { formatBoxNumber, formatCode } from "@moveeasy/shared";
 import type { Tag } from "../api/types";
-import { KindBadge, KindIcon, PrivacyBadge, TimeLockBadge } from "../ui/Badge";
+import { KindBadge, PrivacyBadge, TimeLockBadge } from "../ui/Badge";
+import { KindArt } from "../ui/illustrations";
 import { IconMessage, IconScan } from "../ui/icons";
 import { TagCardMenu } from "./TagActions";
 
@@ -9,7 +10,7 @@ export function TagThumb({ tag }: { tag: Pick<Tag, "kind" | "coverUrl" | "boxNum
   if (tag.coverUrl) return <img className="thumb" src={tag.coverUrl} alt="" loading="lazy" />;
   return (
     <div className={`thumb thumb-${tag.kind}`} aria-hidden="true">
-      {tag.kind === "box" && tag.boxNumber !== null ? <span className="mono thumb-box">{formatBoxNumber(tag.boxNumber)}</span> : <KindIcon kind={tag.kind} size={40} />}
+      {tag.kind === "box" && tag.boxNumber !== null ? <span className="mono thumb-box">{formatBoxNumber(tag.boxNumber)}</span> : <KindArt kind={tag.kind} />}
     </div>
   );
 }
