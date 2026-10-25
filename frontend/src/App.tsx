@@ -11,6 +11,7 @@ import "./styles/editor.css";
 import "./styles/public.css";
 import "./styles/moves.css";
 import "./styles/print.css";
+import "./styles/scrapbook.css";
 
 export function Root() {
   return (

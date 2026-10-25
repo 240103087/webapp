@@ -1,25 +1,28 @@
 :root {
-  --ground: #fbfaf7;
-  --surface: #ffffff;
-  --ink: #1b1a17;
-  --ink-muted: #5f5a52;
-  --line: #e7e2d9;
-  --line-strong: #d3ccbf;
-  --accent: #c63b23;
-  --accent-hover: #ab311c;
-  --accent-ink: #b5361f;
+  /* Warm scrapbook (#67): cream paper, terracotta, olive, kraft */
+  --ground: #f6efe3;
+  --surface: #fffcf6;
+  --ink: #2b211a;
+  --ink-muted: #6a5b4d;
+  --line: #e6d9c3;
+  --line-strong: #d4c3a7;
+  --accent: #a9452a;
+  --accent-hover: #8c3720;
+  --accent-ink: #9a3e25;
   --kraft: #c9a774;
-  --kraft-tint: #f3ebdd;
-  --kraft-ink: #6b5428;
-  --teal: #1f6f6b;
-  --teal-tint: #e2f0ee;
-  --danger-tint: #fbe3de;
-  --gift-ink: #a8321e;
-  --focus: #1f6f6b;
-  --shadow: 0 6px 24px rgba(27, 26, 23, 0.08);
-  --radius: 12px;
+  --kraft-tint: #f1e6d2;
+  --kraft-ink: #66502a;
+  --teal: #4e5d24;
+  --teal-tint: #ecefd9;
+  --danger-tint: #f8e1d7;
+  --gift-ink: #93391f;
+  --focus: #4e5d24;
+  --tape: rgba(214, 190, 140, 0.55);
+  --shadow: 0 1px 2px rgba(43, 33, 26, 0.06), 0 8px 24px rgba(43, 33, 26, 0.1);
+  --radius: 6px;
   --radius-sm: 8px;
-  --font-display: "Bricolage Grotesque", "Atkinson Hyperlegible", system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-hand: "Caveat", "Segoe Print", "Bradley Hand", cursive;
   --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }

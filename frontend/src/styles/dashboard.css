@@ -2,7 +2,7 @@
 .counters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
 .counter-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; display: flex; flex-direction: column; }
 .counter-num { font-family: var(--font-display); font-size: 36px; font-weight: 700; line-height: 1.1; }
-.counter-hot { border-color: var(--accent); background: #fff8f6; }
+.counter-hot { border-color: var(--accent); background: #fdf1ea; }
 .counter-hot .counter-num { color: var(--accent-ink); }
 .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
 .search-box { position: relative; }

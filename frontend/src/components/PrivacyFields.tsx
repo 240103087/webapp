@@ -17,7 +17,7 @@ export interface PrivacyState {
 }
 
 export const THEME_INFO: Record<Theme, { name: string; bg: string; ink: string }> = {
-  paper: { name: "Paper", bg: "#FBFAF7", ink: "#1B1A17" },
+  paper: { name: "Paper", bg: "#F6EFE3", ink: "#2B211A" },
   kraft: { name: "Kraft", bg: "#F3EBDD", ink: "#3B2F1C" },
   rose: { name: "Rose", bg: "#FBE7E4", ink: "#5A1E14" },
   sage: { name: "Sage", bg: "#E6EFE6", ink: "#1F3B26" },

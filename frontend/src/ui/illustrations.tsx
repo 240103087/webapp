@@ -8,16 +8,16 @@ import type { TagKind } from "@moveeasy/shared";
  */
 
 const C = {
-  ink: "#1B1A17",
-  paper: "#FFFFFF",
-  ground: "#FBFAF7",
+  ink: "#2B211A",
+  paper: "#FFFCF6",
+  ground: "#F6EFE3",
   kraft: "#C9A774",
   kraftDark: "#B08D57",
-  kraftTint: "#F3EBDD",
-  accent: "#C63B23",
-  rose: "#FBE3DE",
-  teal: "#1F6F6B",
-  tealTint: "#E2F0EE",
+  kraftTint: "#F1E6D2",
+  accent: "#A9452A",
+  rose: "#F8E1D7",
+  teal: "#5E6E2C",
+  tealTint: "#ECEFD9",
 };
 
 const line = { stroke: C.ink, strokeWidth: 2.5, strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
@@ -64,7 +64,7 @@ function GiftShape() {
     <g>
       <ellipse cx="80" cy="106" rx="50" ry="5" fill={C.ink} opacity="0.08" />
       <rect x="40" y="56" width="80" height="48" rx="3" fill={C.accent} {...line} />
-      <rect x="34" y="42" width="92" height="16" rx="3" fill="#DD5A40" {...line} />
+      <rect x="34" y="42" width="92" height="16" rx="3" fill="#C25A3C" {...line} />
       <rect x="73" y="42" width="14" height="62" fill={C.rose} {...line} />
       <path d="M80 42c-6-14-26-18-28-6-1 8 16 8 28 6Z" fill={C.rose} {...line} />
       <path d="M80 42c6-14 26-18 28-6 1 8-16 8-28 6Z" fill={C.rose} {...line} />

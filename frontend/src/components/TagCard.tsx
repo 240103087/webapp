@@ -34,7 +34,7 @@ export function TagCard({ tag, onChanged }: { tag: Tag; onChanged?: () => void }
               {tag.boxNumber !== null && <span className="mono">{formatBoxNumber(tag.boxNumber)}</span>} · {tag.room} · {tag.moveName}
             </p>
           ) : tag.recipient ? (
-            <p className="muted small">For {tag.recipient}</p>
+            <p className="for-line">For {tag.recipient}</p>
           ) : null}
           <div className="tag-card-foot">
             <span className="mono code">{formatCode(tag.code)}</span>
