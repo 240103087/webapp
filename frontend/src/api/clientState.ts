@@ -29,14 +29,15 @@ type Unlocks = Record<string, { token: string; expiresAt: string }>;
 function unlocks(): Unlocks {
   try { return JSON.parse(read(UNLOCKS_KEY) ?? "{}") as Unlocks; } catch { return {}; }
 }
-export function getUnlock(code: string): string | null {
+/** `now` lets the mock pass its own clock, so tests do not depend on the real date. */
+export function getUnlock(code: string, now = Date.now()): string | null {
   const u = unlocks()[code];
-  if (!u || Date.parse(u.expiresAt) <= Date.now()) return null;
+  if (!u || Date.parse(u.expiresAt) <= now) return null;
   return u.token;
 }
-export function saveUnlock(code: string, token: string, expiresAt: string) {
+export function saveUnlock(code: string, token: string, expiresAt: string, now = Date.now()) {
   const all = unlocks();
-  for (const [k, v] of Object.entries(all)) if (Date.parse(v.expiresAt) <= Date.now()) delete all[k];
+  for (const [k, v] of Object.entries(all)) if (Date.parse(v.expiresAt) <= now) delete all[k];
   all[code] = { token, expiresAt };
   write(UNLOCKS_KEY, JSON.stringify(all));
 }

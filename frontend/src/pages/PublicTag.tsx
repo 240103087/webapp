@@ -7,8 +7,9 @@ import { THEME_INFO } from "../components/PrivacyFields";
 import { Gallery } from "../components/Gallery";
 import { useTitle } from "../ui/useTitle";
 import { KindIcon, formatLongDateTime } from "../ui/Badge";
-import { IconArchive, IconEyeOff, IconLock, IconSearch } from "../ui/icons";
+import { IconLock } from "../ui/icons";
 import { Countdown } from "../components/Countdown";
+import { ArchivedArt, LostArt, SealedArt } from "../ui/illustrations";
 import { PinForm } from "../components/PinForm";
 import { ReplyForm } from "../components/ReplyForm";
 
@@ -60,7 +61,7 @@ export function LockedState({ view, code, onUnlocked }: { view: Exclude<PublicTa
     case "unknown":
       return (
         <div className="public-message">
-          <span className="state-icon" aria-hidden="true"><IconSearch size={32} /></span>
+          <LostArt size={160} />
           <h1 className="public-title">No tag with this code</h1>
           <p>Check the code under the QR code and type it here.</p>
           <form className="code-form" onSubmit={(e) => { e.preventDefault(); const c = normalizeCode(typed); if (c) nav(`/t/${c}`); }}>
@@ -73,7 +74,7 @@ export function LockedState({ view, code, onUnlocked }: { view: Exclude<PublicTa
     case "archived":
       return (
         <div className="public-message">
-          <span className="state-icon" aria-hidden="true"><IconArchive size={32} /></span>
+          <ArchivedArt />
           <h1 className="public-title">This tag is no longer active</h1>
           <p>Its owner has archived it.</p>
         </div>
@@ -81,7 +82,7 @@ export function LockedState({ view, code, onUnlocked }: { view: Exclude<PublicTa
     case "private":
       return (
         <div className="public-message">
-          <span className="state-icon" aria-hidden="true"><IconEyeOff size={32} /></span>
+          <SealedArt />
           <h1 className="public-title">This tag is private</h1>
           <p>Only its owner can see what is attached.</p>
         </div>

@@ -4,6 +4,7 @@ import { api } from "../api";
 import type { Move } from "../api/types";
 import { Button } from "../ui/Button";
 import { EmptyState } from "../ui/EmptyState";
+import { TruckArt } from "../ui/illustrations";
 import { IconPlus, IconTruck } from "../ui/icons";
 import { useTitle } from "../ui/useTitle";
 import { MoveForm } from "../components/MoveForm";
@@ -36,7 +37,7 @@ export function MovesPage() {
       ) : moves === null ? (
         <div className="spinner" role="status" aria-label="Loading" />
       ) : moves.length === 0 ? (
-        !creating && <EmptyState icon={<IconTruck size={40} />} title="No moves yet" text="Create a move, then add a tag for every box." action={<Button variant="primary" onClick={() => setCreating(true)}>Create a move</Button>} />
+        !creating && <EmptyState icon={<TruckArt />} title="No moves yet" text="Create a move, then add a tag for every box." action={<Button variant="primary" onClick={() => setCreating(true)}>Create a move</Button>} />
       ) : (
         <ul className="move-list">
           {moves.map((m) => (

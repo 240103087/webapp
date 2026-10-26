@@ -6,10 +6,11 @@ import type { MoveDetail } from "../api/types";
 import { Button, ButtonLink } from "../ui/Button";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { EmptyState } from "../ui/EmptyState";
+import { KindArt } from "../ui/illustrations";
 import { useToast } from "../ui/Toast";
 import { useTitle } from "../ui/useTitle";
 import { formatDate } from "../ui/Badge";
-import { IconBox, IconEdit, IconPlus, IconPrinter, IconTrash } from "../ui/icons";
+import { IconEdit, IconPlus, IconPrinter, IconTrash } from "../ui/icons";
 import { MoveForm } from "../components/MoveForm";
 import { MoveSearch } from "../components/MoveSearch";
 import { LoadError } from "../ui/LoadError";
@@ -80,7 +81,7 @@ export function MovePage() {
 
       {!searching &&
         (move.rooms.length === 0 ? (
-          <EmptyState icon={<IconBox size={40} />} title="No boxes yet" text="Add a tag for every box: what is inside and which room it goes to." action={<ButtonLink to={`/tags/new?kind=box&move=${move.id}`} variant="primary">Add the first box</ButtonLink>} />
+          <EmptyState icon={<KindArt kind="box" size={180} />} title="No boxes yet" text="Add a tag for every box: what is inside and which room it goes to." action={<ButtonLink to={`/tags/new?kind=box&move=${move.id}`} variant="primary">Add the first box</ButtonLink>} />
         ) : (
           <div className="rooms">
             {move.rooms.map((r) => (

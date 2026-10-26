@@ -6,7 +6,8 @@ import type { Move, Stats, Tag, TagQuery } from "../api/types";
 import { TagCard } from "../components/TagCard";
 import { Button, ButtonLink } from "../ui/Button";
 import { EmptyState } from "../ui/EmptyState";
-import { IconPlus, IconSearch, IconTag } from "../ui/icons";
+import { IconMessage, IconPlus, IconScan, IconSearch, IconTag } from "../ui/icons";
+import { EmptyTagsArt } from "../ui/illustrations";
 import { useTitle } from "../ui/useTitle";
 import { LoadError } from "../ui/LoadError";
 
@@ -83,9 +84,9 @@ export function Dashboard() {
       </div>
 
       <section className="counters" aria-label="Summary">
-        <div className="counter-card"><span className="counter-num">{stats?.tags ?? "–"}</span><span className="muted">Tags</span></div>
-        <div className="counter-card"><span className="counter-num">{stats?.scansThisWeek ?? "–"}</span><span className="muted">Scans this week</span></div>
-        <div className={`counter-card ${stats?.unreadReplies ? "counter-hot" : ""}`}><span className="counter-num">{stats?.unreadReplies ?? "–"}</span><span className="muted">Unread replies</span></div>
+        <div className="counter-card"><span className="counter-icon counter-icon-kraft" aria-hidden="true"><IconTag size={18} /></span><span className="counter-num">{stats?.tags ?? "–"}</span><span className="muted">Tags</span></div>
+        <div className="counter-card"><span className="counter-icon counter-icon-teal" aria-hidden="true"><IconScan size={18} /></span><span className="counter-num">{stats?.scansThisWeek ?? "–"}</span><span className="muted">Scans this week</span></div>
+        <div className={`counter-card ${stats?.unreadReplies ? "counter-hot" : ""}`}><span className="counter-icon counter-icon-accent" aria-hidden="true"><IconMessage size={18} /></span><span className="counter-num">{stats?.unreadReplies ?? "–"}</span><span className="muted">Unread replies</span></div>
       </section>
 
       <div className="toolbar" role="search">
@@ -126,9 +127,9 @@ export function Dashboard() {
         </div>
       ) : tags.length === 0 ? (
         filtered ? (
-          <EmptyState title="No tags match" text="Try another word or clear the filters." action={<Button onClick={() => { setSearch(""); setParams({}, { replace: true }); }}>Clear filters</Button>} />
+          <EmptyState icon={<IconSearch size={40} />} title="No tags match" text="Try another word or clear the filters." action={<Button onClick={() => { setSearch(""); setParams({}, { replace: true }); }}>Clear filters</Button>} />
         ) : (
-          <EmptyState icon={<IconTag size={40} />} title="No tags yet" text="Make a QR code for a gift, a moving box or a keepsake, and attach a message, photos or your voice." action={<ButtonLink to="/tags/new" variant="primary">Create your first tag</ButtonLink>} />
+          <EmptyState icon={<EmptyTagsArt />} title="No tags yet" text="Make a QR code for a gift, a moving box or a keepsake, and attach a message, photos or your voice." action={<ButtonLink to="/tags/new" variant="primary">Create your first tag</ButtonLink>} />
         )
       ) : (
         <>

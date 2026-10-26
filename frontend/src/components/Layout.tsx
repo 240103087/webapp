@@ -9,10 +9,10 @@ export function Logo() {
         <svg viewBox="0 0 32 32" width="28" height="28">
           <rect x="2" y="6" width="28" height="22" rx="4" fill="#C9A774" />
           <rect x="2" y="6" width="28" height="6" rx="3" fill="#B08D57" />
-          <rect x="9" y="15" width="9" height="9" rx="1.5" fill="#1B1A17" />
+          <rect x="9" y="15" width="9" height="9" rx="1.5" fill="#2B211A" />
           <rect x="11.5" y="17.5" width="4" height="4" fill="#C9A774" />
-          <rect x="20" y="15" width="5" height="2.4" rx="1" fill="#C63B23" />
-          <rect x="20" y="19.5" width="5" height="2.4" rx="1" fill="#1B1A17" />
+          <rect x="20" y="15" width="5" height="2.4" rx="1" fill="#a9452a" />
+          <rect x="20" y="19.5" width="5" height="2.4" rx="1" fill="#2B211A" />
         </svg>
       </span>
       <span className="logo-text">MoveEasy</span>

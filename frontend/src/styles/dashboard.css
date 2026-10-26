@@ -2,7 +2,7 @@
 .counters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
 .counter-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; display: flex; flex-direction: column; }
 .counter-num { font-family: var(--font-display); font-size: 36px; font-weight: 700; line-height: 1.1; }
-.counter-hot { border-color: var(--accent); background: #fff8f6; }
+.counter-hot { border-color: var(--accent); background: #fdf1ea; }
 .counter-hot .counter-num { color: var(--accent-ink); }
 .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
 .search-box { position: relative; }
@@ -53,3 +53,16 @@ div.thumb-box { background: repeating-linear-gradient(90deg, var(--kraft) 0 46%,
 .card-menu-list button { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 0; background: transparent; text-align: left; font: inherit; color: var(--ink); border-radius: 8px; cursor: pointer; }
 .card-menu-list button:hover, .card-menu-list button:focus-visible { background: var(--kraft-tint); }
 .card-menu-list .danger { color: var(--accent-ink); }
+
+/* Counter icons and illustrated thumbnails (#65) */
+.counter-card { position: relative; }
+.counter-icon { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 999px; display: grid; place-items: center; }
+.counter-icon-kraft { background: var(--kraft-tint); color: var(--kraft-ink); }
+.counter-icon-teal { background: var(--teal-tint); color: var(--teal); }
+.counter-icon-accent { background: var(--danger-tint); color: var(--gift-ink); }
+.thumb .art { width: 62%; max-width: 200px; transition: transform 0.2s; }
+.tag-card:hover .thumb .art { transform: rotate(-3deg) scale(1.04); }
+div.thumb-gift { background: radial-gradient(circle at 30% 20%, #fff3f0, var(--danger-tint) 70%); }
+div.thumb-keepsake { background: radial-gradient(circle at 30% 20%, #f2f9f8, var(--teal-tint) 70%); }
+@media (max-width: 600px) { .counter-icon { display: none; } }
+@media (prefers-reduced-motion: reduce) { .tag-card:hover .thumb .art { transform: none; } }

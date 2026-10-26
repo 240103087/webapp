@@ -69,4 +69,4 @@ legend.label { font-weight: 700; font-size: 14px; padding: 0; margin-bottom: 6px
 .qr-url { overflow-wrap: anywhere; }
 .replies { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .replies li { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; }
-.reply-unread { border-color: var(--accent) !important; background: #fff8f6; }
+.reply-unread { border-color: var(--accent) !important; background: #fdf1ea; }
