@@ -22,7 +22,6 @@
   --radius: 6px;
   --radius-sm: 8px;
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
-  --font-hand: "Caveat", "Segoe Print", "Bradley Hand", cursive;
   --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }

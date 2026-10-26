@@ -25,8 +25,8 @@ updated.
 
 Warm scrapbook (#67): cream notebook paper with a faint dot grid, cards
 pasted on with washi tape like photos, a terracotta color for actions and
-FRAGILE, olive for links and success, kraft for boxes, serif titles and a
-handwritten line for the personal touch ("For Dana"). Personal, not
+FRAGILE, olive for links and success, kraft for boxes, serif titles. No
+handwritten fonts: the owner tried Caveat and dropped it (#68). Personal, not
 corporate SaaS.
 
 The first version (until #67) was "paper labels": off-white ground,
@@ -50,7 +50,7 @@ loaded last.
 | `--ink-muted` | `#6A5B4D` | secondary text (5.7:1 on ground) |
 | `--line` | `#E6D9C3` | borders, dividers |
 | `--accent` | `#A9452A` | terracotta: primary buttons, FRAGILE, destructive confirm (white text 5.9:1) |
-| `--accent-ink` | `#9A3E25` | accent text on light backgrounds, the handwritten "For" line |
+| `--accent-ink` | `#9A3E25` | accent text on light backgrounds, the "For ..." line |
 | `--kraft` | `#C9A774` | box labels, box number backgrounds |
 | `--kraft-tint` | `#F1E6D2` | box badges, highlights |
 | `--teal` | `#4E5D24` | olive (name kept for history): links, success, keepsake (6.3:1) |
@@ -70,8 +70,6 @@ Six public-page themes, each a pair (background, ink): `paper`
 
 - Display: **Fraunces** 600-700 (serif), for page titles and the
   title on the public page
-- Hand: **Caveat** 700, only for short personal lines: the recipient
-  ("For Aigerim") and the log-in tagline. Never for body text or labels
 - Body: **Atkinson Hyperlegible** 400/700, 16px base, line height 1.5.
   Chosen for legibility for older relatives scanning a gift
 - Mono: **JetBrains Mono**, for tag codes (`7KQ4 M2XP`, always split 4+4)

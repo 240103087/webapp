@@ -7,7 +7,6 @@ body {
   background-size: 22px 22px;
 }
 h1, h2, h3 { font-weight: 700; letter-spacing: -0.015em; }
-.hand { font-family: var(--font-hand); font-weight: 700; }
 
 /* Page titles get a marker highlight */
 .page-head h1 {
@@ -46,7 +45,7 @@ h1, h2, h3 { font-weight: 700; letter-spacing: -0.015em; }
 .tag-card-body { padding: 12px 6px 14px; }
 .tag-card-title { font-size: 20px; }
 .card-menu { top: 18px; right: 18px; }
-.for-line { font-family: var(--font-hand); font-weight: 700; font-size: 22px; line-height: 1.1; color: var(--accent-ink); }
+.for-line { font-weight: 700; font-size: 15px; color: var(--accent-ink); }
 
 /* Counters: sticky notes */
 .counter-card { border: 0; border-radius: 4px; box-shadow: var(--shadow); }
@@ -68,10 +67,10 @@ h1, h2, h3 { font-weight: 700; letter-spacing: -0.015em; }
 /* Auth: the card is taped to the page */
 .auth-card { position: relative; border: 0; overflow: visible; }
 .auth-page { background: transparent; }
-.auth-tagline { font-family: var(--font-hand); font-size: 24px; font-weight: 700; line-height: 1.2; color: var(--ink-muted); }
+.auth-tagline { font-size: 16px; color: var(--ink-muted); }
 
-/* Public page: handwritten recipient, serif title */
-.recipient { font-family: var(--font-hand); text-transform: none; letter-spacing: 0; font-size: 30px; font-weight: 700; line-height: 1.1; }
+/* Public page: serif recipient line and title (no handwritten font, #68) */
+.recipient { font-family: var(--font-display); text-transform: none; letter-spacing: 0; font-size: 22px; font-weight: 600; line-height: 1.2; }
 .public-title { letter-spacing: -0.02em; }
 .public-text { font-size: 19px; }
 .kind-stamp { border-style: dashed; }
@@ -90,7 +89,6 @@ h1, h2, h3 { font-weight: 700; letter-spacing: -0.015em; }
 }
 @media (max-width: 600px) {
   .tag-grid { gap: 28px; }
-  .auth-tagline { font-size: 21px; }
 }
 @media print {
   body { background: #fff; }
