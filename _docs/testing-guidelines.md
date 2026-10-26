@@ -33,6 +33,9 @@ Read before writing tests.
 - For privacy, test the negative: another owner's token gets 404, a
   visitor without a PIN gets no `message` field at all
 - Time: inject `now` instead of waiting. Never `sleep` in a test
+- Pass `now` all the way down. A helper called from a fixed-clock test must
+  not read `Date.now()`, or the test passes today and fails a week later
+  (the mock PIN unlock tests broke this way, #65)
 - No test depends on another test's data. Each API test file creates its
   own app with a fresh store
 - To test a failing backend in a component test, stub the service:
