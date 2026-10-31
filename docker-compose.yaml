@@ -1,0 +1,46 @@
+# MoveEasy Memory Tags: Postgres and the app (#72).
+#   docker compose up --build     -> http://localhost:8100
+# Every setting has a dev default; production overrides them through env or a .env file
+# (see deploy/aws/README.md). Data is kept in named volumes: `docker compose down -v` deletes it.
+name: moveeasy
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-moveeasy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-moveeasy}
+      POSTGRES_DB: ${POSTGRES_DB:-moveeasy}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:22-bookworm-slim}
+    image: moveeasy:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-moveeasy}:${POSTGRES_PASSWORD:-moveeasy}@db:5432/${POSTGRES_DB:-moveeasy}
+      MEDIA_SECRET: ${MEDIA_SECRET:-dev-only-secret-change-me}
+      SEED: ${SEED:-1}
+      TRUST_PROXY: ${TRUST_PROXY:-loopback}
+    volumes:
+      # The database is in Postgres; /data keeps the uploaded media
+      - uploads:/data
+    ports:
+      - "${APP_PORT:-8100}:8787"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  uploads:

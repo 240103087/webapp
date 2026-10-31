@@ -23,6 +23,8 @@ export interface Config {
   /** Built frontend to serve from the same origin (`npm start`, #38). */
   staticDir: string | null;
   log: boolean;
+  /** Express `trust proxy`: which proxies may set X-Forwarded-For. `loopback` unless TRUST_PROXY says otherwise (#72). */
+  trustProxy: string;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -39,5 +41,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     // Relative paths are taken from the repository root, so `STATIC_DIR=frontend/dist` works from any workspace.
     staticDir: env.STATIC_DIR ? path.resolve(REPO_ROOT, env.STATIC_DIR) : null,
     log: env.NODE_ENV !== "test" && env.LOG !== "0",
+    // Behind Caddy in Docker the proxy has a private address: TRUST_PROXY="loopback, uniquelocal".
+    trustProxy: env.TRUST_PROXY ?? "loopback",
   };
 }

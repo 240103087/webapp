@@ -45,7 +45,7 @@ async function openStore(config: Config): Promise<Store> {
 export function createApp(deps: AppDeps): Express {
   const app = express();
   app.disable("x-powered-by");
-  app.set("trust proxy", "loopback");
+  app.set("trust proxy", deps.config.trustProxy);
   if (deps.config.log) {
     app.use((req, res, next) => {
       const start = Date.now();
