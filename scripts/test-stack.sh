@@ -10,6 +10,8 @@ export APP_PORT="${APP_PORT:-8100}"
 BUILD="${STACK_BUILD:---build}"   # STACK_BUILD=--no-build reuses an image built before
 
 cleanup() {
+  local code=$?
+  if [ "$code" != 0 ]; then docker compose logs --no-color --tail 200 || true; fi
   if [ "${KEEP_STACK:-0}" != "1" ]; then docker compose down -v --remove-orphans; fi
 }
 trap cleanup EXIT
