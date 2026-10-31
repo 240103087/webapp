@@ -32,9 +32,14 @@ deploys run through the restricted `DeployRole`.
 1. Pick a region in the top right, for example `eu-central-1` (Frankfurt). Remember it
 2. Open **CloudFormation > Create stack > With new resources**
 3. **Upload a template file**: `deploy/aws/moveeasy-stack.yaml` from this repository
-4. Stack name: `moveeasy`. Keep the default parameters. Set `CreateGitHubOidcProvider` to
-   `false` only if the account already has the GitHub identity provider (IAM > Identity
-   providers lists `token.actions.githubusercontent.com`)
+4. Stack name: `moveeasy`. Keep the default parameters, except `GitHubDeploy`:
+   - `existing-provider` if the account already has the GitHub identity provider
+     (IAM > Identity providers lists `token.actions.githubusercontent.com`)
+   - `off` if the account may not create it. Organization and student accounts can forbid it
+     with a service control policy; the stack then fails on `GitHubOidcProvider` with "explicit
+     deny in a service control policy". With `off` the app still runs; you deploy updates by
+     hand (see "Look inside the server")
+   Such accounts can also be limited to some regions: use the region the console opens in
 5. On the last page tick **I acknowledge that AWS CloudFormation might create IAM resources**,
    then **Submit**
 6. Wait for `CREATE_COMPLETE` (about 3 minutes). The instance then installs Docker and builds
@@ -47,10 +52,17 @@ deploys run through the restricted `DeployRole`.
 ```bash
 aws cloudformation deploy --stack-name moveeasy \
   --template-file deploy/aws/moveeasy-stack.yaml --capabilities CAPABILITY_IAM
+# organization account that forbids the OIDC provider: add
+#   --parameter-overrides GitHubDeploy=off
 aws cloudformation describe-stacks --stack-name moveeasy --query "Stacks[0].Outputs" --output table
 ```
 
+A stack that failed to create must be deleted before the next try:
+`aws cloudformation delete-stack --stack-name moveeasy`.
+
 ## 2. Turn on deploys from GitHub (once)
+
+Skip this with `GitHubDeploy=off`: the `deploy` job then stays skipped.
 
 In the GitHub repository: **Settings > Secrets and variables > Actions > Variables > New
 repository variable**:

@@ -28,13 +28,16 @@ Parameters:
     Type: String
     Default: 240103087/webapp
     Description: owner/name of the GitHub repository whose Actions may deploy (main branch only).
-  CreateGitHubOidcProvider:
+  GitHubDeploy:
     Type: String
-    Default: "true"
-    AllowedValues: ["true", "false"]
+    Default: create-provider
+    AllowedValues: [create-provider, existing-provider, "off"]
     Description: >-
-      "false" if this AWS account already has the token.actions.githubusercontent.com identity
-      provider (an account can have only one).
+      Deploys from GitHub Actions through OIDC. "create-provider" creates the
+      token.actions.githubusercontent.com identity provider; "existing-provider" if the account
+      already has it (an account can have only one); "off" if the account may not create it
+      (some organization or student accounts forbid it). With "off" there is no deploy role and
+      you deploy with deploy/aws/deploy.sh on the instance.
   LatestAmiId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
@@ -42,7 +45,8 @@ Parameters:
 
 Conditions:
   HasDomain: !Not [!Equals [!Ref DomainName, ""]]
-  CreateOidc: !Equals [!Ref CreateGitHubOidcProvider, "true"]
+  CreateOidc: !Equals [!Ref GitHubDeploy, create-provider]
+  HasDeployRole: !Not [!Equals [!Ref GitHubDeploy, "off"]]
 
 Resources:
   SecurityGroup:
@@ -151,6 +155,7 @@ Resources:
   # outputs and run a command on this one instance (#75).
   DeployRole:
     Type: AWS::IAM::Role
+    Condition: HasDeployRole
     Properties:
       Description: MoveEasy deploys from GitHub Actions (main branch only)
       MaxSessionDuration: 3600
@@ -198,5 +203,6 @@ Outputs:
     Description: For Session Manager (Systems Manager > Session Manager > Start session).
     Value: !Ref Instance
   DeployRoleArn:
+    Condition: HasDeployRole
     Description: Put this in the GitHub repository variable AWS_DEPLOY_ROLE_ARN.
     Value: !GetAtt DeployRole.Arn
