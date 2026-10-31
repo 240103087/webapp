@@ -1,0 +1,37 @@
+# Production additions to ../docker-compose.yaml (#74): Caddy serves HTTPS on 80/443 and is
+# the only way in. Used by deploy/aws/deploy.sh:
+#   docker compose -f docker-compose.yaml -f deploy/docker-compose.prod.yaml up -d --build
+# Secrets (POSTGRES_PASSWORD, MEDIA_SECRET) and DOMAIN come from the .env file next to
+# docker-compose.yaml, which the server writes on first boot.
+services:
+  db:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+
+  app:
+    # Not published on the host: only Caddy reaches it
+    ports: !reset []
+    environment:
+      MEDIA_SECRET: ${MEDIA_SECRET:?set MEDIA_SECRET in .env}
+      # Caddy is on the private Docker network, so trust its X-Forwarded-For
+      TRUST_PROXY: "loopback, uniquelocal"
+
+  caddy:
+    image: caddy:2-alpine
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

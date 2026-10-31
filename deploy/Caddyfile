@@ -1,0 +1,6 @@
+# HTTPS in front of the app (#74). Caddy gets and renews the certificate itself.
+# DOMAIN comes from .env on the server: <elastic-ip>.sslip.io or your own domain.
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:8787
+}
