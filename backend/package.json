@@ -9,8 +9,9 @@
     "build": "tsc -p tsconfig.json",
     "test": "vitest run && TEST_STORE=prisma vitest run",
     "db:migrate": "tsx src/db-cli.ts migrate",
-    "postinstall": "prisma generate",
-    "db:seed": "tsx src/db-cli.ts seed"
+    "postinstall": "prisma generate && prisma generate --schema prisma/postgres/schema.prisma",
+    "db:seed": "tsx src/db-cli.ts seed",
+    "test:postgres": "TEST_STORE=prisma TEST_DATABASE=postgres vitest run"
   },
   "dependencies": {
     "@moveeasy/shared": "0.1.0",

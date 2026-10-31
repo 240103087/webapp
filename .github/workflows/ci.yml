@@ -1,9 +1,13 @@
+# CI/CD (#75): tests in parallel, then the Compose stack, then a deploy of main to AWS.
 name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch: # "Run workflow" on main deploys again by hand
+
 jobs:
-  test:
+  frontend:
+    name: Frontend and shared tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -12,11 +16,50 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm test
-      - run: npm run build
-  e2e:
+      - run: npm test -w shared
+      - run: npm test -w frontend
+
+  backend:
+    name: Backend tests (memory, SQLite, Postgres)
     runs-on: ubuntu-latest
-    needs: test
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: moveeasy
+          POSTGRES_PASSWORD: moveeasy
+          POSTGRES_DB: moveeasy
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U moveeasy" --health-interval 3s --health-timeout 5s --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test -w backend
+      - run: npm run test:postgres -w backend
+        env:
+          TEST_POSTGRES_URL: postgresql://moveeasy:moveeasy@localhost:5432/moveeasy
+
+  build:
+    name: Type-check and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  e2e:
+    name: End-to-end tests (npm start, SQLite)
+    runs-on: ubuntu-latest
+    needs: [frontend, backend, build]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,3 +75,83 @@ jobs:
         with:
           name: playwright-traces
           path: e2e/test-results/
+
+  stack:
+    name: Docker Compose stack (Postgres) - integration and end-to-end tests
+    runs-on: ubuntu-latest
+    needs: [frontend, backend, build]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+        working-directory: e2e
+      - run: npm run test:stack
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: stack-playwright-traces
+          path: e2e/test-results/
+
+  deploy:
+    name: Deploy to AWS
+    runs-on: ubuntu-latest
+    needs: [e2e, stack]
+    # Only main, and only once the repository variables from deploy/aws/README.md are set
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.AWS_DEPLOY_ROLE_ARN != ''
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    permissions:
+      id-token: write # GitHub OIDC token for AWS, no keys stored in GitHub
+      contents: read
+    env:
+      STACK: ${{ vars.AWS_STACK_NAME || 'moveeasy' }}
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Read the stack outputs
+        id: stack
+        run: |
+          out() { aws cloudformation describe-stacks --stack-name "$STACK" --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
+          echo "instance=$(out InstanceId)" >> "$GITHUB_OUTPUT"
+          echo "url=$(out AppUrl)" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy this commit on the instance
+        env:
+          INSTANCE: ${{ steps.stack.outputs.instance }}
+        run: |
+          id=$(aws ssm send-command --instance-ids "$INSTANCE" --document-name AWS-RunShellScript \
+            --comment "Deploy ${GITHUB_SHA::7}" --timeout-seconds 600 \
+            --parameters "{\"commands\":[\"bash /opt/moveeasy/deploy/aws/deploy.sh $GITHUB_SHA\"],\"executionTimeout\":[\"1800\"]}" \
+            --query Command.CommandId --output text)
+          echo "SSM command $id"
+          status=Pending
+          for i in $(seq 1 120); do
+            sleep 15
+            status=$(aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE" --query Status --output text 2>/dev/null || echo Pending)
+            echo "$status"
+            case "$status" in Success|Failed|Cancelled|TimedOut) break ;; esac
+          done
+          aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE" --query StandardOutputContent --output text | tail -n 40
+          aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE" --query StandardErrorContent --output text | tail -n 40
+          test "$status" = Success
+
+      - name: Check the health endpoint
+        env:
+          URL: ${{ steps.stack.outputs.url }}
+        run: |
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$URL/api/health" || true)
+            echo "$URL/api/health -> $code"
+            if [ "$code" = 200 ]; then exit 0; fi
+            sleep 5
+          done
+          echo "The app did not answer 200 within 5 minutes"
+          exit 1

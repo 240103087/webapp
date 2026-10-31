@@ -1,0 +1,202 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  MoveEasy Memory Tags (#74, #75). One EC2 instance running Docker Compose: the app, Postgres and
+  Caddy (HTTPS). An Elastic IP, a security group open on 80/443 only, SSM instead of SSH, and an
+  IAM role that GitHub Actions assumes through OIDC to deploy.
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues: [t3.micro, t3.small, t3.medium, t2.micro]
+    Description: t3.micro fits the free tier; the instance gets a 2 GB swap file for builds.
+  DomainName:
+    Type: String
+    Default: ""
+    Description: >-
+      Optional. Your own domain with an A record pointing at the Elastic IP. Leave empty to use
+      <elastic-ip>.sslip.io, which works with HTTPS without buying a domain.
+  RepoUrl:
+    Type: String
+    Default: https://github.com/240103087/webapp.git
+    Description: Public Git repository to deploy.
+  Branch:
+    Type: String
+    Default: main
+    Description: Branch deployed on first boot. CI deploys the exact commit it tested.
+  GitHubRepo:
+    Type: String
+    Default: 240103087/webapp
+    Description: owner/name of the GitHub repository whose Actions may deploy (main branch only).
+  CreateGitHubOidcProvider:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+    Description: >-
+      "false" if this AWS account already has the token.actions.githubusercontent.com identity
+      provider (an account can have only one).
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+    Description: Amazon Linux 2023, resolved at deploy time.
+
+Conditions:
+  HasDomain: !Not [!Equals [!Ref DomainName, ""]]
+  CreateOidc: !Equals [!Ref CreateGitHubOidcProvider, "true"]
+
+Resources:
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: MoveEasy - HTTP and HTTPS only (no SSH, Postgres stays private)
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0, Description: "HTTP: redirect to HTTPS and certificate checks" }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0, Description: HTTPS }
+      Tags: [{ Key: Name, Value: !Sub "${AWS::StackName}" }]
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        # Session Manager shell and Run Command (used by the deploy job) instead of SSH
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref InstanceRole]
+
+  ElasticIp:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags: [{ Key: Name, Value: !Sub "${AWS::StackName}" }]
+
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref InstanceProfile
+      SecurityGroupIds: [!GetAtt SecurityGroup.GroupId]
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs: { VolumeSize: 20, VolumeType: gp3, Encrypted: true, DeleteOnTermination: true }
+      MetadataOptions:
+        HttpTokens: required
+      Tags: [{ Key: Name, Value: !Sub "${AWS::StackName}" }]
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash
+            # First boot: Docker, swap, the repository, production secrets, then the first deploy.
+            # Log: /var/log/moveeasy-setup.log
+            set -euxo pipefail
+            exec > >(tee -a /var/log/moveeasy-setup.log) 2>&1
+
+            dnf install -y docker git
+            mkdir -p /usr/local/lib/docker/cli-plugins
+            curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-compose \
+              https://github.com/docker/compose/releases/download/v2.39.2/docker-compose-linux-x86_64
+            curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-buildx \
+              https://github.com/docker/buildx/releases/download/v0.26.1/buildx-v0.26.1.linux-amd64
+            chmod +x /usr/local/lib/docker/cli-plugins/*
+            systemctl enable --now docker
+
+            # The frontend build needs more memory than a t3.micro has
+            if [ ! -f /swapfile ]; then
+              dd if=/dev/zero of=/swapfile bs=1M count=2048
+              chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+              echo '/swapfile none swap sw 0 0' >> /etc/fstab
+            fi
+
+            APP_DIR=/opt/moveeasy
+            [ -d "$APP_DIR/.git" ] || git clone --depth 1 --branch "${Branch}" "${RepoUrl}" "$APP_DIR"
+            cd "$APP_DIR"
+
+            # Secrets are made here and never leave the instance
+            if [ ! -f .env ]; then
+              umask 077
+              cat > .env <<ENV
+            POSTGRES_PASSWORD=$(openssl rand -hex 24)
+            MEDIA_SECRET=$(openssl rand -hex 32)
+            DOMAIN=${Domain}
+            ENV
+            fi
+
+            bash deploy/aws/deploy.sh "${Branch}"
+          - Domain: !If [HasDomain, !Ref DomainName, !Sub "${ElasticIp}.sslip.io"]
+
+  ElasticIpAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt ElasticIp.AllocationId
+      InstanceId: !Ref Instance
+
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Condition: CreateOidc
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: [sts.amazonaws.com]
+      ThumbprintList: [6938fd4d98bab03faadb97b34396831e3780aea1, 1c58a3a8518e8759bf075b76b750d4f2df264fcd]
+
+  # GitHub Actions on main assumes this role (no AWS keys in GitHub). It can only read this stack's
+  # outputs and run a command on this one instance (#75).
+  DeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: MoveEasy deploys from GitHub Actions (main branch only)
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubRepo}:ref:refs/heads/main"
+      Policies:
+        - PolicyName: deploy-moveeasy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadStackOutputs
+                Effect: Allow
+                Action: cloudformation:DescribeStacks
+                Resource: !Ref AWS::StackId
+              - Sid: RunDeployOnThisInstance
+                Effect: Allow
+                Action: ssm:SendCommand
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/${Instance}"
+                  - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript"
+              - Sid: ReadCommandResult
+                Effect: Allow
+                Action: [ssm:GetCommandInvocation, ssm:ListCommandInvocations]
+                Resource: "*"
+
+Outputs:
+  AppUrl:
+    Description: Open this. HTTPS works a minute or two after the first boot finishes (about 10 minutes on t3.micro).
+    Value: !Sub
+      - "https://${Domain}"
+      - Domain: !If [HasDomain, !Ref DomainName, !Sub "${ElasticIp}.sslip.io"]
+  PublicIp:
+    Description: Elastic IP. Point your domain's A record here if you set DomainName.
+    Value: !Ref ElasticIp
+  InstanceId:
+    Description: For Session Manager (Systems Manager > Session Manager > Start session).
+    Value: !Ref Instance
+  DeployRoleArn:
+    Description: Put this in the GitHub repository variable AWS_DEPLOY_ROLE_ARN.
+    Value: !GetAtt DeployRole.Arn

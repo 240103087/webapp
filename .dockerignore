@@ -1,0 +1,19 @@
+# Keep the build context small and free of local state (#70)
+**/node_modules
+**/dist
+**/coverage
+**/*.db
+**/*.db-journal
+backend/data
+backend/uploads
+backend/generated
+e2e/.data
+e2e/test-results
+e2e/playwright-report
+.git
+.github
+.env
+**/.DS_Store
+docs
+_docs
+deploy

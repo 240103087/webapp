@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { copyFileSync, existsSync, mkdtempSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -9,8 +10,13 @@ import type { Store } from "../src/store/types";
  * API tests run twice: with the memory store (`vitest run`) and with SQLite
  * (`TEST_STORE=prisma vitest run`), see package.json. Each Prisma test gets its
  * own copy of a database that was migrated once.
+ *
+ * `TEST_DATABASE=postgres` (with `TEST_STORE=prisma`, `npm run test:postgres`) runs the same tests
+ * against Postgres at `TEST_POSTGRES_URL` (#71). Each test gets its own migrated schema there.
  */
 export const TEST_STORE: Config["store"] = process.env.TEST_STORE === "prisma" ? "prisma" : "memory";
+export const TEST_DATABASE: "sqlite" | "postgres" = process.env.TEST_DATABASE === "postgres" ? "postgres" : "sqlite";
+export const TEST_POSTGRES_URL = process.env.TEST_POSTGRES_URL ?? "postgresql://moveeasy:moveeasy@localhost:5432/moveeasy";
 
 let template: string | null = null;
 function migratedTemplate(): string {
@@ -20,8 +26,17 @@ function migratedTemplate(): string {
   return (template = file);
 }
 
-/** A fresh database file for one test. */
+/** A Postgres URL with its own, newly migrated schema. */
+export function freshPostgresUrl(base = TEST_POSTGRES_URL): string {
+  const url = new URL(base);
+  url.searchParams.set("schema", `t_${process.pid}_${randomUUID().slice(0, 8)}`);
+  migrate(url.toString());
+  return url.toString();
+}
+
+/** A fresh, migrated database for one test: a SQLite file, or a Postgres schema with `TEST_DATABASE=postgres`. */
 export function freshDatabaseUrl(): string {
+  if (TEST_DATABASE === "postgres") return freshPostgresUrl();
   const dir = mkdtempSync(path.join(os.tmpdir(), "moveeasy-db-"));
   const file = path.join(dir, "test.db");
   copyFileSync(migratedTemplate(), file);

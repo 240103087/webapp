@@ -2,10 +2,10 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { PrismaStore } from "../src/store/prisma-store";
-import { freshDatabaseUrl } from "./helpers";
+import { freshDatabaseUrl, TEST_DATABASE } from "./helpers";
 import { storeSuite } from "./store.suite";
 
-storeSuite("PrismaStore (SQLite)", async () => PrismaStore.open(freshDatabaseUrl()));
+storeSuite(`PrismaStore (${TEST_DATABASE === "postgres" ? "Postgres" : "SQLite"})`, async () => PrismaStore.open(freshDatabaseUrl()));
 
 describe("PrismaStore specifics (#34)", () => {
   it("gives different box numbers to boxes created at the same time", async () => {

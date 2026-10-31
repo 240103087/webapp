@@ -1,6 +1,7 @@
 // MoveEasy Memory Tags - database schema (#33).
-// Mirrors the row types in src/store/types.ts. Nothing here is SQLite-specific:
-// to use Postgres, change `provider` and DATABASE_URL.
+// Mirrors the row types in src/store/types.ts. Used for SQLite (the default).
+// Postgres uses a copy with its own migrations: postgres/schema.prisma (#71).
+// Change both files together; test/schema.test.ts fails if their models differ.
 
 generator client {
   provider = "prisma-client-js"
