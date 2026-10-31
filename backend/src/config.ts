@@ -4,13 +4,16 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, "../..");
 
+/** `postgres://` and `postgresql://` URLs use Postgres; anything else (`file:...`) uses SQLite (#71). */
+export const isPostgresUrl = (url: string) => /^postgres(ql)?:\/\//.test(url);
+
 export interface Config {
   port: number;
   /** Where media files are kept. Created on start. */
   uploadDir: string;
   /** HMAC key for signed media URLs. */
   mediaSecret: string;
-  /** `prisma` (SQLite through Prisma, the default) or `memory` (data lost on restart). */
+  /** `prisma` (SQLite or Postgres through Prisma, the default) or `memory` (data lost on restart). */
   store: "memory" | "prisma";
   databaseUrl: string;
   /** Load the demo data into an empty store on start. */
@@ -23,7 +26,7 @@ export interface Config {
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  // SQLite through Prisma unless STORE=memory (iteration 4).
+  // Prisma unless STORE=memory (iteration 4). DATABASE_URL picks SQLite (`file:`) or Postgres (#71).
   const store = env.STORE === "memory" ? "memory" : "prisma";
   return {
     port: Number(env.PORT ?? 8787),

@@ -1,7 +1,8 @@
 import { PrismaClient, type Prisma } from "@prisma/client";
 import { rm } from "node:fs/promises";
+import { createRequire } from "node:module";
 import type { MediaType, Privacy, TagKind, Theme } from "@moveeasy/shared";
-import type { Config } from "../config";
+import { isPostgresUrl, type Config } from "../config";
 import { FileStore } from "../files";
 import { seedStore } from "./seed";
 import type {
@@ -36,12 +37,23 @@ const mediaIn = (m: MediaRow) => ({ ...m, createdAt: d(m.createdAt) });
 type DbReply = Prisma.ReplyGetPayload<object>;
 const replyOut = (r: DbReply): ReplyRow => ({ ...r, createdAt: s(r.createdAt) });
 
+/**
+ * The client generated from prisma/postgres/schema.prisma (`postinstall`). Its models are the same as the
+ * SQLite client's (test/schema.test.ts), so it is used through the same type. Loaded only for Postgres.
+ */
+function postgresClient(): typeof PrismaClient {
+  const require = createRequire(import.meta.url);
+  return (require("../../generated/postgres/index.js") as { PrismaClient: typeof PrismaClient }).PrismaClient;
+}
+
 export class PrismaStore implements Store {
   readonly kind = "prisma" as const;
   constructor(private db: PrismaClient) {}
 
+  /** SQLite for `file:` URLs, Postgres for `postgres(ql)://` URLs (#71). */
   static open(databaseUrl: string): PrismaStore {
-    return new PrismaStore(new PrismaClient({ datasources: { db: { url: databaseUrl } } }));
+    const Client = isPostgresUrl(databaseUrl) ? postgresClient() : PrismaClient;
+    return new PrismaStore(new Client({ datasources: { db: { url: databaseUrl } } }));
   }
 
   async insertUser(u: UserRow) { await this.db.user.create({ data: { ...u, createdAt: d(u.createdAt) } }); }
