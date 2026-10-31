@@ -24,7 +24,7 @@ original task list; the issues are the source of truth now.
 - `user-test-bug` - a bug found by running the app and testing it by hand.
   It goes through the same lifecycle, and QA adds a test case for it so it
   cannot come back
-- `iteration-1` ... `iteration-5` - which stage of the build an `mvp` issue
+- `iteration-1` ... `iteration-7` - which stage of the build an issue
   belongs to
 
 ## Iterations
@@ -42,6 +42,11 @@ something that runs.
 | 4 | Backend, SQLite | the same tests passing against SQLite through Prisma; data survives a restart |
 | 5 | Connect | the frontend talks to the backend; end-to-end tests in a real browser |
 | 6 | Bug bash | the app tested by hand; every bug filed as `user-test-bug` and fixed |
+| 7 | Deploy (#48) | one Docker image, Postgres, Docker Compose, tests against the stack, AWS with CloudFormation, CI/CD with a health check (#70-#76) |
+
+Iteration 7 follows "Deploy a Full-Stack App with AI Coding Assistants":
+containerize, switch to Postgres, add Compose and tests against it, deploy
+by hand once, then automate the deploy in CI.
 
 ## Roles
 
@@ -81,9 +86,18 @@ PM grooms --> Engineer implements --> QA verifies --PASS--> merge, QA closes
 
 ## CI
 
-`.github/workflows/ci.yml` runs on every push: `npm test` and `npm run
-build`, then the Playwright tests (`npm run e2e`). Traces are uploaded when
-an end-to-end test fails. A red `main` is fixed before anything else. When
+`.github/workflows/ci.yml` runs on every push and pull request (#75):
+
+1. In parallel: frontend and shared tests; backend tests on the memory
+   store, SQLite and a Postgres service; `npm run build`
+2. Then, in parallel: the Playwright tests on `npm start` with SQLite
+   (`npm run e2e`), and the Docker Compose stack with Postgres
+   (`npm run test:stack`)
+3. On `main` only, when the repository variable `AWS_DEPLOY_ROLE_ARN` is
+   set: deploy to AWS through the GitHub OIDC role and SSM, then poll
+   `/api/health` until it answers 200 (`deploy/aws/README.md`)
+
+Traces are uploaded when an end-to-end test fails. A red `main` is fixed before anything else. When
 the proof of a fix is CI itself (for example an unhandled rejection that
 only showed up there, #59), QA closes the issue after CI is green on
 `main`.

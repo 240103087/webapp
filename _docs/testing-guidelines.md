@@ -20,7 +20,16 @@ Read before writing tests.
   database). `store.suite.ts` runs the same store tests on both stores
 - `e2e/tests/*.spec.ts` - Playwright, Chromium, desktop (1280x800) and
   phone (375x812), against `npm start` on :8788 with a fresh SQLite file
-  and upload folder
+  and upload folder. With `E2E_BASE_URL` they run against an app that is
+  already running instead
+- Postgres: `npm run test:postgres -w backend` runs the backend tests
+  once more on Postgres at `TEST_POSTGRES_URL`; each test gets its own
+  migrated schema. For a local Postgres:
+  `docker run -d -p 5432:5432 -e POSTGRES_USER=moveeasy -e POSTGRES_PASSWORD=moveeasy -e POSTGRES_DB=moveeasy postgres:16-alpine`
+- `e2e/stack/*.spec.ts` - integration tests for the Docker Compose stack:
+  the image serves the frontend, the app uses Postgres, data survives a
+  restart of the app container. `npm run test:stack` starts the stack,
+  runs these and the whole Playwright suite against it, and removes it
 
 ## Rules
 

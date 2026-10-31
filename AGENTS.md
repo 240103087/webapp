@@ -13,8 +13,14 @@ through Prisma. See `_docs/plan.md` for the specification.
   interface in `types.ts`, the mock in `mock/`, the HTTP client in `http/`
 - `backend/` - Express API. `src/store/` holds the `Store` interface and
   its two implementations (memory, Prisma). Routes never touch Prisma
-  directly
-- `e2e/` - Playwright tests against the running app
+  directly. `DATABASE_URL` picks SQLite (`file:`) or Postgres
+  (`postgresql://`); a schema change goes into both
+  `prisma/schema.prisma` and `prisma/postgres/schema.prisma`, with a
+  migration for each
+- `e2e/` - Playwright tests against the running app; `e2e/stack/` holds the
+  integration tests for the Docker Compose stack
+- `deploy/` - production Compose override, Caddyfile, AWS CloudFormation
+  template and the deploy script (`deploy/aws/README.md`)
 - `openapi.yaml` - the API contract. The backend and the HTTP client must
   match it. Each `operationId` is the name of an `Api` method in
   `frontend/src/api/types.ts`; `backend/test/openapi.test.ts` fails if a
@@ -43,7 +49,13 @@ Read only what the task needs:
   inside a workspace - one file
 - `npm run build` - type-check and build everything
 - `npm run e2e` - Playwright end-to-end tests (builds and starts the app
-  on :8788 with its own database)
+  on :8788 with its own database). `E2E_BASE_URL=...` runs them against an
+  app that is already running instead
+- `npm run test:postgres -w backend` - the backend tests on Postgres at
+  `TEST_POSTGRES_URL` (default `postgresql://moveeasy:moveeasy@localhost:5432/moveeasy`)
+- `docker compose up --build` - the app with Postgres on :8100
+- `npm run test:stack` - build the Compose stack, run `e2e/stack` and the
+  Playwright suite against it, remove it
 - `npm run build && npm start` - the built app and the API on one port
   (:8787), like production
 - `npm run db:migrate -w backend`, `npm run db:seed -w backend` - Prisma
