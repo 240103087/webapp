@@ -18,6 +18,10 @@ Read before writing tests.
   backend` runs the whole folder twice: on the memory store, then with
   `TEST_STORE=prisma` on SQLite (each test gets a copy of a migrated
   database). `store.suite.ts` runs the same store tests on both stores
+- `e2e/tests/features/<feature>.spec.ts` - one Playwright test per feature,
+  each tracked by its own `e2e-test` issue (#80). Shared steps (create a
+  tag, a move, a box; a visitor in a fresh browser) are in
+  `e2e/tests/features/helpers.ts`
 - `e2e/tests/*.spec.ts` - Playwright, Chromium, desktop (1280x800) and
   phone (375x812), against `npm start` on :8788 with a fresh SQLite file
   and upload folder. With `E2E_BASE_URL` they run against an app that is

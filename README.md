@@ -71,9 +71,16 @@ alone on SQLite.
 ## Deploy
 
 The app runs on AWS: one EC2 instance with the app, Postgres and Caddy
-(HTTPS), created by a CloudFormation template, and deployed by GitHub
-Actions on every push to `main` once the tests pass. Step by step:
+(HTTPS), created by a CloudFormation template. GitHub Actions can deploy it on
+every push to `main` once the tests pass; on an AWS account that forbids the
+GitHub OIDC provider that job is off and updates run through Session Manager
+(#78). Step by step:
 [`deploy/aws/README.md`](deploy/aws/README.md).
+
+The quick first deploy is on Render's free plan from the same Dockerfile and a
+managed Postgres, described in [`render.yaml`](render.yaml). Render redeploys
+every commit to `main` once the GitHub checks pass:
+[`deploy/render/README.md`](deploy/render/README.md).
 
 ## Commands
 

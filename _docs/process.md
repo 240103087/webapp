@@ -26,6 +26,8 @@ original task list; the issues are the source of truth now.
   cannot come back
 - `iteration-1` ... `iteration-7` - which stage of the build an issue
   belongs to
+- `e2e-test` - one Playwright end-to-end test for one feature (#80, sub-issues
+  #81-#97); its spec is `e2e/tests/features/<feature>.spec.ts`
 
 ## Iterations
 
@@ -42,7 +44,7 @@ something that runs.
 | 4 | Backend, SQLite | the same tests passing against SQLite through Prisma; data survives a restart |
 | 5 | Connect | the frontend talks to the backend; end-to-end tests in a real browser |
 | 6 | Bug bash | the app tested by hand; every bug filed as `user-test-bug` and fixed |
-| 7 | Deploy (#48) | one Docker image, Postgres, Docker Compose, tests against the stack, AWS with CloudFormation, CI/CD with a health check (#70-#76) |
+| 7 | Deploy (#48) | one Docker image, Postgres, Docker Compose, tests against the stack, AWS with CloudFormation, CI/CD with a health check (#70-#76), an `e2e-test` per feature (#80-#97), Render (#98) |
 
 Iteration 7 follows "Deploy a Full-Stack App with AI Coding Assistants":
 containerize, switch to Postgres, add Compose and tests against it, deploy

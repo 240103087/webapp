@@ -17,10 +17,12 @@ through Prisma. See `_docs/plan.md` for the specification.
   (`postgresql://`); a schema change goes into both
   `prisma/schema.prisma` and `prisma/postgres/schema.prisma`, with a
   migration for each
-- `e2e/` - Playwright tests against the running app; `e2e/stack/` holds the
-  integration tests for the Docker Compose stack
+- `e2e/` - Playwright tests against the running app; `e2e/tests/features/`
+  has one spec per feature, each with its own `e2e-test` issue; `e2e/stack/`
+  holds the integration tests for the Docker Compose stack
 - `deploy/` - production Compose override, Caddyfile, AWS CloudFormation
-  template and the deploy script (`deploy/aws/README.md`)
+  template and the deploy script (`deploy/aws/README.md`); Render steps in
+  `deploy/render/README.md` for the root `render.yaml`
 - `openapi.yaml` - the API contract. The backend and the HTTP client must
   match it. Each `operationId` is the name of an `Api` method in
   `frontend/src/api/types.ts`; `backend/test/openapi.test.ts` fails if a
