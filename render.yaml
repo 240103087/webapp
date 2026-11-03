@@ -1,0 +1,32 @@
+# Render Blueprint (#98): the same Docker image as docker-compose.yaml, with Render's managed
+# Postgres in place of the `db` service. Render > New > Blueprint > pick this repository.
+# Free plan only: no paid features are used. Steps and limits: deploy/render/README.md
+services:
+  - type: web
+    name: moveeasy
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    # Redeploy main on every commit, but only once the GitHub Actions checks are green (#75)
+    branch: main
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: moveeasy-db
+          property: connectionString
+      - key: MEDIA_SECRET
+        generateValue: true
+      - key: SEED
+        value: "1"
+      # The free plan has no persistent disk: uploaded files are lost when the service restarts
+      - key: UPLOAD_DIR
+        value: /tmp/uploads
+
+databases:
+  - name: moveeasy-db
+    plan: free
+    databaseName: moveeasy
+    user: moveeasy
