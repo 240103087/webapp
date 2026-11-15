@@ -59,7 +59,8 @@ jobs:
 
   e2e:
     name: End-to-end tests (npm start, SQLite)
-    runs-on: ubuntu-latest
+    # Playwright 1.56 cannot install Chromium on ubuntu-latest (26.04) yet
+    runs-on: ubuntu-24.04
     needs: [frontend, backend, build]
     steps:
       - uses: actions/checkout@v4
@@ -79,7 +80,8 @@ jobs:
 
   stack:
     name: Docker Compose stack (Postgres) - integration and end-to-end tests
-    runs-on: ubuntu-latest
+    # Playwright 1.56 cannot install Chromium on ubuntu-latest (26.04) yet
+    runs-on: ubuntu-24.04
     needs: [frontend, backend, build]
     steps:
       - uses: actions/checkout@v4
