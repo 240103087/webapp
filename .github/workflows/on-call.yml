@@ -1,0 +1,133 @@
+# The on-call agent (#106). Grafana's contact point "MoveEasy on-call agent" calls GitHub's repository_dispatch
+# with event "grafana-alert" when an alert fires (observability/grafana/provision.mjs). Claude Code then works
+# the alert headless, with the instructions in on-call-engineer/prompt.md: root cause, a failing test, the
+# smallest fix, the tests. This workflow records it in an "incident" issue and opens a pull request with the
+# fix. Nothing is merged or deployed without a person.
+#
+# Secrets: ANTHROPIC_API_KEY (or CLAUDE_CODE_OAUTH_TOKEN from `claude setup-token`), and ONCALL_GITHUB_TOKEN
+# (fine-grained, this repository: Contents, Issues, Pull requests read and write) so the pull request runs CI.
+# Without ONCALL_GITHUB_TOKEN the workflow's own token is used, and CI does not start on the agent's pull request.
+name: On-call agent
+run-name: "On-call: ${{ github.event.client_payload.commonLabels.alertname || 'manual test' }} ${{ github.event.client_payload.commonLabels.environment || '' }}"
+
+on:
+  repository_dispatch:
+    types: [grafana-alert]
+  workflow_dispatch:
+    inputs:
+      alert:
+        description: "The alert to work on, as JSON or plain text (to test the agent)"
+        required: true
+        default: '{"status":"firing","commonLabels":{"alertname":"MoveEasy server failures","service":"moveeasy","environment":"dev","operation":"POST /api/tags","severity":"critical"},"commonAnnotations":{"summary":"POST /api/tags failed 5 times in 5 minutes in dev"}}'
+
+concurrency:
+  group: on-call
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  respond:
+    name: Investigate and fix
+    # Grafana also sends "resolved": nothing to investigate then
+    if: github.event_name == 'workflow_dispatch' || github.event.client_payload.status == 'firing'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ secrets.ONCALL_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Where the agent writes its report
+        run: echo "ONCALL_REPORT=$RUNNER_TEMP/report.md" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+          token: ${{ secrets.ONCALL_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm install -g @anthropic-ai/claude-code@2.1.316
+
+      - name: The alert
+        id: alert
+        env:
+          PAYLOAD: ${{ toJSON(github.event.client_payload) }}
+          INPUT: ${{ inputs.alert }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then printf '%s' "$INPUT" > alert.json; else printf '%s' "$PAYLOAD" > alert.json; fi
+          mv alert.json "$RUNNER_TEMP/alert.json"
+          summary=$(jq -r '.commonAnnotations.summary // .alerts[0].annotations.summary // .commonLabels.alertname // "Alert"' "$RUNNER_TEMP/alert.json" 2>/dev/null || head -c 120 "$RUNNER_TEMP/alert.json")
+          echo "summary=$summary" >> "$GITHUB_OUTPUT"
+          node on-call-engineer/build-prompt.mjs "$RUNNER_TEMP/alert.json" > "$RUNNER_TEMP/prompt.txt"
+
+      - name: Open the incident issue
+        id: issue
+        env:
+          SUMMARY: ${{ steps.alert.outputs.summary }}
+        run: |
+          gh label create incident --color B60205 --description "An alert the on-call agent worked on (#106)" 2>/dev/null || true
+          {
+            echo "The alert fired and the on-call agent is investigating: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo
+            echo '```json'
+            jq . "$RUNNER_TEMP/alert.json" 2>/dev/null || cat "$RUNNER_TEMP/alert.json"
+            echo '```'
+          } > "$RUNNER_TEMP/issue.md"
+          url=$(gh issue create --title "Incident: $SUMMARY" --label incident --body-file "$RUNNER_TEMP/issue.md")
+          echo "number=${url##*/}" >> "$GITHUB_OUTPUT"
+
+      - name: Claude Code works the alert
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          claude -p "$(cat "$RUNNER_TEMP/prompt.txt")" \
+            --output-format stream-json --verbose \
+            --permission-mode acceptEdits \
+            --allowedTools Bash Read Edit Write Grep Glob \
+            --max-turns 80 > "$RUNNER_TEMP/session.jsonl"
+          tail -n 1 "$RUNNER_TEMP/session.jsonl" | jq -r '.result // empty' | head -c 4000
+
+      - name: Save the session log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: on-call-session-${{ steps.issue.outputs.number }}
+          path: |
+            ${{ runner.temp }}/alert.json
+            ${{ runner.temp }}/prompt.txt
+            ${{ runner.temp }}/session.jsonl
+            ${{ runner.temp }}/report.md
+          if-no-files-found: ignore
+
+      - name: Pull request with the fix, report on the issue
+        env:
+          N: ${{ steps.issue.outputs.number }}
+        run: |
+          if [ ! -s "$ONCALL_REPORT" ]; then printf 'VERDICT: NEEDS_HUMAN\nTITLE: On-call agent wrote no report\n\nSee the session log of the run.\n' > "$ONCALL_REPORT"; fi
+          verdict=$(sed -n 's/^VERDICT: *//p' "$ONCALL_REPORT" | head -1)
+          title=$(sed -n 's/^TITLE: *//p' "$ONCALL_REPORT" | head -1)
+          body="$RUNNER_TEMP/body.md"
+          if [ -n "$(git status --porcelain)" ] && [ "$verdict" != FALSE_POSITIVE ]; then
+            branch="on-call/incident-$N"
+            git config user.name "MoveEasy on-call agent"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git switch -c "$branch"
+            git add -A
+            git commit -q -m "${title:-Fix for incident} (#$N)" -m "Found and fixed by the on-call agent (Claude Code) for the alert in #$N."
+            git push -q -u origin "$branch"
+            { cat "$ONCALL_REPORT"; echo; echo "Fixes #$N"; echo; echo "Session log: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"; } > "$body"
+            pr=$(gh pr create --base main --head "$branch" --title "${title:-Fix for incident #$N}" --body-file "$body")
+            { echo "## On-call agent: $verdict"; echo; echo "Pull request: $pr"; echo; cat "$ONCALL_REPORT"; } > "$RUNNER_TEMP/comment.md"
+            gh issue comment "$N" --body-file "$RUNNER_TEMP/comment.md"
+            echo "### $verdict: $pr" >> "$GITHUB_STEP_SUMMARY"
+          else
+            { echo "## On-call agent: ${verdict:-NEEDS_HUMAN}"; echo; echo "No code change."; echo; cat "$ONCALL_REPORT"; } > "$RUNNER_TEMP/comment.md"
+            gh issue comment "$N" --body-file "$RUNNER_TEMP/comment.md"
+            if [ "$verdict" = FALSE_POSITIVE ]; then gh issue close "$N" --reason "not planned"; fi
+            echo "### ${verdict:-NEEDS_HUMAN}: no code change, see #$N" >> "$GITHUB_STEP_SUMMARY"
+          fi

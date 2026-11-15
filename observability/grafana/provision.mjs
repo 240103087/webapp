@@ -3,12 +3,13 @@
 // its HTTP API (#104, #105, #106). Made for Grafana Cloud, where the local file provisioning does not apply; the
 // "Set up Grafana" workflow (.github/workflows/grafana.yml) runs it with the repository secrets. Safe to run again.
 //
-//   GRAFANA_URL=https://<stack>.grafana.net GRAFANA_TOKEN=glsa_... ONCALL_DISPATCH_TOKEN=github_pat_... \
+//   GRAFANA_URL=https://<stack>.grafana.net GRAFANA_TOKEN=glsa_... ONCALL_GITHUB_TOKEN=github_pat_... \
 //     node observability/grafana/provision.mjs
 //
 // GRAFANA_TOKEN: a service account token with the Admin role (Administration > Users and access > Service accounts).
-// ONCALL_DISPATCH_TOKEN: a fine-grained GitHub token for this repository with "Contents: read and write"; Grafana
-// sends it to GitHub's repository_dispatch API, which starts the on-call agent (.github/workflows/on-call.yml).
+// ONCALL_GITHUB_TOKEN: a fine-grained GitHub token for this repository with Contents, Issues and Pull requests
+// "read and write". Grafana sends it to GitHub's repository_dispatch API, which starts the on-call agent
+// (.github/workflows/on-call.yml); the agent's workflow uses it too, so its pull request runs CI.
 // Optional: GITHUB_REPOSITORY (default 240103087/webapp), PROMETHEUS_UID and LOKI_UID (found automatically).
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -19,7 +20,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const base = (process.env.GRAFANA_URL ?? "").replace(/\/+$/, "");
 const token = process.env.GRAFANA_TOKEN ?? "";
 const repo = process.env.GITHUB_REPOSITORY || "240103087/webapp";
-const dispatchToken = process.env.ONCALL_DISPATCH_TOKEN ?? "";
+const githubToken = process.env.ONCALL_GITHUB_TOKEN ?? "";
 if (!base || !token) {
   console.error("Set GRAFANA_URL and GRAFANA_TOKEN (a service account token, or user:password for a local Grafana)");
   process.exit(1);
@@ -87,8 +88,8 @@ await api("PUT", `/api/v1/provisioning/folder/${FOLDER.uid}/rule-groups/${GROUP}
 console.log(`Alert rules: ${rules.map((r) => r.title).join(", ")}`);
 
 // 4. Contact point: GitHub repository_dispatch, which starts the on-call agent
-if (!dispatchToken) {
-  console.log("ONCALL_DISPATCH_TOKEN is not set: the contact point and notification policy are left as they are");
+if (!githubToken) {
+  console.log("ONCALL_GITHUB_TOKEN is not set: the contact point and notification policy are left as they are");
   process.exit(0);
 }
 const contact = {
@@ -100,7 +101,7 @@ const contact = {
     url: `https://api.github.com/repos/${repo}/dispatches`,
     httpMethod: "POST",
     authorization_scheme: "Bearer",
-    authorization_credentials: dispatchToken,
+    authorization_credentials: githubToken,
     maxAlerts: 10,
     payload: { template: DISPATCH_PAYLOAD },
   },

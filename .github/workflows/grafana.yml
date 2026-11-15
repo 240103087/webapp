@@ -1,0 +1,36 @@
+# Set up Grafana Cloud (#104, #105, #106): puts the MoveEasy dashboard, the alert rules, the on-call contact point
+# and the notification policy into the Grafana stack, from the repository secrets. Run it again after changing
+# observability/grafana/dashboards/moveeasy.json or provisioning/alerting/rules.yaml.
+name: Set up Grafana
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - observability/grafana/dashboards/**
+      - observability/grafana/provisioning/alerting/**
+      - observability/grafana/provision.mjs
+
+jobs:
+  provision:
+    name: Dashboard, alerts and contact point
+    runs-on: ubuntu-latest
+    env:
+      GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
+      GRAFANA_TOKEN: ${{ secrets.GRAFANA_TOKEN }}
+      ONCALL_GITHUB_TOKEN: ${{ secrets.ONCALL_GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Provision
+        run: |
+          if [ -z "$GRAFANA_URL" ] || [ -z "$GRAFANA_TOKEN" ]; then
+            echo "::warning::GRAFANA_URL and GRAFANA_TOKEN are not set, nothing to do (see _docs/devops.md)"
+            exit 0
+          fi
+          node observability/grafana/provision.mjs

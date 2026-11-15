@@ -11,3 +11,4 @@ e2e/playwright-report/
 .DS_Store
 e2e/.data/
 backend/generated/
+on-call-engineer/sessions/
