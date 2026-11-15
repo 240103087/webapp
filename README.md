@@ -77,10 +77,22 @@ GitHub OIDC provider that job is off and updates run through Session Manager
 (#78). Step by step:
 [`deploy/aws/README.md`](deploy/aws/README.md).
 
-The quick first deploy is on Render's free plan from the same Dockerfile and a
-managed Postgres, described in [`render.yaml`](render.yaml). Render redeploys
-every commit to `main` once the GitHub checks pass:
+On Render's free plan there are two environments, described in
+[`render.yaml`](render.yaml): **dev** (https://moveeasy-dev.onrender.com) gets
+every green commit on `main`, **prod** (https://moveeasy-prod.onrender.com)
+changes only when the "Promote dev to prod" workflow is run by hand. Both run
+the same image, built once by CI and pushed to GitHub Container Registry:
 [`deploy/render/README.md`](deploy/render/README.md).
+
+## Observability
+
+The backend sends metrics, traces and logs with OpenTelemetry: to a local
+Collector, Prometheus, Loki, Tempo and Grafana (`observability/`), or to
+Grafana Cloud from dev and prod. The MoveEasy dashboard shows tags created,
+page views, scans, PIN attempts, uploads, failures and latency. Two alerts
+watch failures and PIN lockouts, and an AI agent (Claude Code) is on call for
+them: it reproduces the failure with a test and opens a pull request with the
+fix. Everything is in [`_docs/devops.md`](_docs/devops.md).
 
 ## Commands
 
@@ -96,6 +108,7 @@ every commit to `main` once the GitHub checks pass:
 | `npm run build` | type-check and build |
 | `npm start` | serve the built app and the API on one port |
 | `npm run db:migrate` | apply Prisma migrations |
+| `docker compose -f observability/docker-compose.yaml up -d` | the local observability stack, Grafana on :3000 (`_docs/devops.md`) |
 | `npm run db:seed` | **reset**: delete all data and uploaded files and load the demo data again |
 
 ## Settings

@@ -97,8 +97,16 @@ describe("MoveEasy metrics (#104)", () => {
     await request(app).post("/api/tags").set(auth).send({ kind: "gift", title: "For Mom", recipient: "Mom", message: "Hi", privacy: "public", theme: "rose", allowReplies: true }).expect(500);
     console.error = err;
     violations.splice(0); // the 500 is the point of this test, openapi.yaml rightly does not list it
-    const points = await reader.points("moveeasy.operation.failures");
+    const points = (await reader.points("moveeasy.operation.failures")).filter((p) => p.value !== 0);
     expect(points.map((p) => [p.attributes.operation, p.value])).toEqual([["POST /api/tags", 1]]);
+  });
+
+  it("starts the known series at 0, with one failure series per API route, so the first failure shows in increase() (#105)", async () => {
+    const { reader } = await setup();
+    const ops = (await reader.points("moveeasy.operation.failures")).map((p) => p.attributes.operation);
+    expect(ops).toEqual(expect.arrayContaining(["POST /api/tags", "GET /api/public/tags/:code", "POST /api/tags/:tagId/media", "POST /api/auth/login"]));
+    expect(await reader.value("moveeasy.operation.failures")).toBe(0);
+    expect((await reader.points("moveeasy.tags.created")).map((p) => p.attributes.kind).sort()).toEqual(["box", "gift", "keepsake"]);
   });
 
   it("the in-flight gauge goes back to zero; request time is recorded by route template", async () => {

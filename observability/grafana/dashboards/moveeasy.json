@@ -859,7 +859,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (operation) (increase(moveeasy_operation_failures_total{environment=~\"$environment\",version=~\"$version\"}[5m]))",
+          "expr": "sum by (operation) (increase(moveeasy_operation_failures_total{environment=~\"$environment\",version=~\"$version\"}[5m])) > 0",
           "legendFormat": "{{operation}}",
           "interval": "1m"
         }

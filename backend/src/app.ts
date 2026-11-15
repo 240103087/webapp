@@ -88,13 +88,30 @@ export function createApp(deps: AppDeps): Express {
   if (deps.config.staticDir) serveFrontend(app, deps.config.staticDir);
   app.use(countFailures(deps));
   app.use(errorHandler);
+  deps.metrics.initialize(apiOperations(app));
   return app;
+}
+
+type Layer = { route?: { path: string; methods: Record<string, boolean> }; handle?: { stack?: Layer[] } };
+
+/** Every API route template, like `POST /api/tags`, from the routers mounted on /api. */
+export function apiOperations(app: Express): string[] {
+  const ops = new Set<string>();
+  const walk = (stack: Layer[], prefix: string) => {
+    for (const layer of stack) {
+      if (layer.route) for (const m of Object.keys(layer.route.methods)) ops.add(`${m.toUpperCase()} ${layer.route.path.startsWith("/api/") ? "" : prefix}${layer.route.path}`);
+      else if (layer.handle?.stack) walk(layer.handle.stack, "/api");
+    }
+  };
+  walk((app as unknown as { _router: { stack: Layer[] } })._router.stack, "");
+  return [...ops].filter((o) => o.includes(" /api/"));
 }
 
 /** The route template of a request, like `POST /api/tags/:tagId/media`, so metrics do not get one series per id. */
 export function operationOf(req: Request): string {
   const route = (req as Request & { route?: { path?: string } }).route?.path;
-  return route ? `${req.method} /api${route}` : `${req.method} unmatched`;
+  if (!route) return `${req.method} unmatched`;
+  return `${req.method} ${route.startsWith("/api/") ? route : `/api${route}`}`;
 }
 
 /** Unexpected errors (the ones that become a 500) count as a failure of their operation (#104); the alert watches this (#105). */

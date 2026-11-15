@@ -1,3 +1,4 @@
+import { MEDIA_LIMITS, TAG_KINDS } from "@moveeasy/shared";
 import { metrics, type Attributes, type Counter, type Histogram, type Meter, type UpDownCounter } from "@opentelemetry/api";
 
 /** What happened to one PIN attempt: opened, wrong, the wrong one that started a lockout, or tried while locked out. */
@@ -49,6 +50,25 @@ export class AppMetrics {
 
   private with(extra: Attributes = {}): Attributes {
     return { ...this.base, ...extra };
+  }
+
+  /**
+   * Starts every series we know of at 0 (#105). Without this, the first failure of an operation creates its
+   * series already at 1, `increase()` cannot see that step, and the alert would need one failure more.
+   */
+  initialize(operations: string[]) {
+    for (const kind of TAG_KINDS) {
+      this.tagsCreated.add(0, this.with({ kind }));
+      this.tagScans.add(0, this.with({ kind }));
+    }
+    for (const state of ["open", "pinRequired", "timeLocked", "private", "archived", "unknown"]) this.tagViews.add(0, this.with({ state }));
+    for (const result of ["ok", "wrong", "locked_out", "blocked"] satisfies PinResult[]) this.pinAttempts.add(0, this.with({ result }));
+    for (const type of Object.keys(MEDIA_LIMITS)) this.mediaUploads.add(0, this.with({ type, result: "ok" }));
+    for (const result of ["ok", "bad_credentials"]) this.logins.add(0, this.with({ result }));
+    this.replies.add(0, this.with());
+    this.signups.add(0, this.with());
+    this.inFlight.add(0, this.with());
+    for (const operation of operations) this.failures.add(0, this.with({ operation }));
   }
 
   tagCreated(kind: string) { this.tagsCreated.add(1, this.with({ kind })); }
