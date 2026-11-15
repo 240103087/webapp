@@ -80,6 +80,7 @@ export function tagRoutes(deps: AppDeps): Router {
     const fields = await applyInput(null, req.body, user.id);
     const row: TagRow = { id: newId("t"), ownerId: user.id, code: await uniqueCode(), createdAt: deps.now().toISOString(), ...fields };
     await store.insertTag(row);
+    deps.metrics.tagCreated(row.kind);
     res.status(201).json(await toTag(deps, row));
   }));
 

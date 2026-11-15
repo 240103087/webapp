@@ -34,18 +34,26 @@ export function mediaRoutes(deps: AppDeps): Router {
     // Parse the multipart body only after the owner check, so strangers cannot fill the disk.
     // The folder can disappear under a running server (`npm run db:seed` resets uploads, #61).
     mkdirSync(tmp, { recursive: true });
-    await new Promise<void>((resolve, reject) =>
-      upload(req, res, (err?: unknown) => {
-        if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") reject(new HttpError(413, "too_big", "Too big. Videos up to 50 MB"));
-        else if (err) reject(err instanceof multer.MulterError ? new HttpError(422, "validation", err.message) : err);
-        else resolve();
-      }),
-    );
+    // Every upload is counted, accepted or rejected with its error code (#104).
+    let type = "unknown";
+    try {
+      await new Promise<void>((resolve, reject) =>
+        upload(req, res, (err?: unknown) => {
+          if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") reject(new HttpError(413, "too_big", "Too big. Videos up to 50 MB"));
+          else if (err) reject(err instanceof multer.MulterError ? new HttpError(422, "validation", err.message) : err);
+          else resolve();
+        }),
+      );
+    } catch (err) {
+      deps.metrics.mediaRejected(type, err instanceof HttpError ? err.code : "error");
+      throw err;
+    }
     const file = req.file;
     try {
       if (!file) throw new HttpError(422, "validation", "Choose a file", { fields: { file: "Choose a file" } });
       const mime = baseMime(file.mimetype);
       const check = checkMediaFile(mime, file.size);
+      if (check.ok) type = check.type;
       if (!check.ok) throw check.error.startsWith("Too big") ? new HttpError(413, "too_big", check.error) : new HttpError(422, "bad_file", check.error);
       const caption = mediaCaptionSchema.parse(req.body?.caption ?? "");
       const existing = await store.listMedia([tag.id]);
@@ -54,7 +62,11 @@ export function mediaRoutes(deps: AppDeps): Router {
       const rel = await files.put(tag.id, id, EXT_BY_MIME[mime] ?? "", file.path);
       const row: MediaRow = { id, tagId: tag.id, type: check.type, mimeType: mime, size: file.size, caption, position: existing.length, file: rel, createdAt: deps.now().toISOString() };
       await store.insertMedia(row);
+      deps.metrics.mediaUploaded(row.type, row.size);
       res.status(201).json(toMedia(deps, row));
+    } catch (err) {
+      deps.metrics.mediaRejected(type, err instanceof HttpError ? err.code : "error");
+      throw err;
     } finally {
       if (file) await unlink(file.path).catch(() => {});
     }

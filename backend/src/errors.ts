@@ -26,6 +26,10 @@ export const apiNotFound: RequestHandler = (req, res) => {
   res.status(404).json({ code: "not_found", message: `No route ${req.method} ${req.originalUrl.split("?")[0]}` } satisfies ApiErrorBody);
 };
 
+/** True for an error the app did not throw on purpose: it becomes a 500 and counts as a failure (#104). */
+export const isUnexpected = (err: unknown): boolean =>
+  !(err instanceof ZodError || err instanceof HttpError) && !["entity.parse.failed", "entity.too.large"].includes((err as { type?: string } | null)?.type ?? "");
+
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ZodError) err = validationError(err);
   if (err instanceof HttpError) {

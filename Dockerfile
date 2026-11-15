@@ -43,7 +43,10 @@ COPY frontend/public/demo frontend/public/demo
 
 RUN mkdir -p /data && chown node:node /data
 USER node
+# The image tag, set by CI (#101). /api/health and every metric, trace and log report it
+ARG APP_VERSION=local
 ENV NODE_ENV=production \
+    APP_VERSION=${APP_VERSION} \
     NPM_CONFIG_UPDATE_NOTIFIER=false \
     PORT=8787 \
     DATABASE_URL=file:/data/moveeasy.db \
@@ -55,4 +58,5 @@ HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8787)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 WORKDIR /app/backend
 # Migrations run on start and the demo data is loaded into an empty database (see src/app.ts)
-CMD ["node", "--import", "tsx", "src/server.ts"]
+# OpenTelemetry is loaded first and stays off unless OTEL_EXPORTER_OTLP_ENDPOINT is set (#103)
+CMD ["node", "--import", "tsx", "--import", "./src/telemetry/instrumentation.ts", "src/server.ts"]

@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import express, { type Express } from "express";
+import { context, type Meter } from "@opentelemetry/api";
+import express, { type ErrorRequestHandler, type Express, type Request } from "express";
 import { loadConfig, type Config } from "./config";
-import { apiNotFound, errorHandler } from "./errors";
+import { apiNotFound, errorHandler, isUnexpected } from "./errors";
 import { FileStore, UrlSigner } from "./files";
 import { authRoutes } from "./routes/auth";
 import { mediaRoutes } from "./routes/media";
@@ -14,6 +15,8 @@ import { tagRoutes } from "./routes/tags";
 import { MemoryStore } from "./store/memory";
 import { seedStore } from "./store/seed";
 import type { Store } from "./store/types";
+import { emitLog } from "./telemetry/log";
+import { appMetrics, type AppMetrics } from "./telemetry/metrics";
 
 export interface AppDeps {
   config: Config;
@@ -22,14 +25,17 @@ export interface AppDeps {
   store: Store;
   files: FileStore;
   signer: UrlSigner;
+  /** MoveEasy's metrics (#104). */
+  metrics: AppMetrics;
 }
 
 /** Builds the store named in the config and seeds it with the demo data when it is empty. */
-export async function buildDeps(config: Config = loadConfig(), now: () => Date = () => new Date()): Promise<AppDeps> {
+export async function buildDeps(config: Config = loadConfig(), now: () => Date = () => new Date(), meter?: Meter): Promise<AppDeps> {
   const store: Store = await openStore(config);
   const files = new FileStore(config.uploadDir);
   if (config.seed && (await store.isEmpty())) await seedStore(store, files, now());
-  return { config, now, store, files, signer: new UrlSigner(config.mediaSecret) };
+  const metrics = appMetrics({ environment: config.appEnv, version: config.appVersion }, meter);
+  return { config, now, store, files, signer: new UrlSigner(config.mediaSecret), metrics };
 }
 
 async function openStore(config: Config): Promise<Store> {
@@ -46,17 +52,28 @@ export function createApp(deps: AppDeps): Express {
   const app = express();
   app.disable("x-powered-by");
   app.set("trust proxy", deps.config.trustProxy);
-  if (deps.config.log) {
-    app.use((req, res, next) => {
-      const start = Date.now();
-      res.on("finish", () => console.log(`${req.method} ${req.originalUrl} ${res.statusCode} ${Date.now() - start}ms`));
-      next();
+  app.use("/api", (req, res, next) => {
+    // In-flight gauge and the request log, as a console line and an OpenTelemetry log record in the request's trace (#103).
+    const start = Date.now();
+    const ctx = context.active();
+    deps.metrics.requestStarted();
+    res.once("close", () => {
+      deps.metrics.requestEnded();
+      if (!deps.config.log || req.path === "/health") return;
+      const ms = Date.now() - start;
+      const line = `${req.method} ${req.originalUrl.split("?")[0]} ${res.statusCode} ${ms}ms`;
+      console.log(line);
+      emitLog(res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : "info", line, {
+        "http.request.method": req.method, "url.path": req.originalUrl.split("?")[0], "http.route": operationOf(req), "http.response.status_code": res.statusCode, "duration_ms": ms,
+      }, ctx);
     });
-  }
+    next();
+  });
   app.use(express.json({ limit: "200kb" }));
 
   app.get("/api/health", (_req, res) => {
-    res.json({ ok: true });
+    // Which build runs where (#101): the promotion workflow waits for prod to report the promoted version.
+    res.json({ ok: true, environment: deps.config.appEnv, version: deps.config.appVersion });
   });
 
   app.use("/api", authRoutes(deps));
@@ -69,8 +86,32 @@ export function createApp(deps: AppDeps): Express {
 
   app.use("/api", apiNotFound);
   if (deps.config.staticDir) serveFrontend(app, deps.config.staticDir);
+  app.use(countFailures(deps));
   app.use(errorHandler);
   return app;
+}
+
+/** The route template of a request, like `POST /api/tags/:tagId/media`, so metrics do not get one series per id. */
+export function operationOf(req: Request): string {
+  const route = (req as Request & { route?: { path?: string } }).route?.path;
+  return route ? `${req.method} /api${route}` : `${req.method} unmatched`;
+}
+
+/** Unexpected errors (the ones that become a 500) count as a failure of their operation (#104); the alert watches this (#105). */
+function countFailures(deps: AppDeps): ErrorRequestHandler {
+  return (err, req, _res, next) => {
+    if (isUnexpected(err)) {
+      const operation = operationOf(req);
+      deps.metrics.failed(operation);
+      emitLog("error", `${operation} failed: ${err instanceof Error ? err.message : String(err)}`, {
+        "http.route": operation,
+        "exception.type": err instanceof Error ? err.name : typeof err,
+        "exception.message": err instanceof Error ? err.message : String(err),
+        "exception.stacktrace": err instanceof Error ? (err.stack ?? "") : "",
+      });
+    }
+    next(err);
+  };
 }
 
 /**
