@@ -21,6 +21,7 @@ export class AppMetrics {
   private readonly logins: Counter;
   private readonly failures: Counter;
   private readonly inFlight: UpDownCounter;
+  private readonly duration: Histogram;
 
   constructor(meter: Meter, labels: { environment: string; version: string }) {
     this.base = { ...labels };
@@ -39,6 +40,11 @@ export class AppMetrics {
     this.logins = meter.createCounter("moveeasy.users.logins", { description: "Log-in attempts, by result (ok, bad_credentials)" });
     this.failures = meter.createCounter("moveeasy.operation.failures", { description: "Requests that failed with an unexpected server error (5xx), by operation" });
     this.inFlight = meter.createUpDownCounter("moveeasy.http.requests.in_flight", { description: "API requests being handled right now" });
+    this.duration = meter.createHistogram("moveeasy.http.request.duration", {
+      description: "API request time, by operation and status class",
+      unit: "s",
+      advice: { explicitBucketBoundaries: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10] },
+    });
   }
 
   private with(extra: Attributes = {}): Attributes {
@@ -59,7 +65,10 @@ export class AppMetrics {
   loggedIn(result: "ok" | "bad_credentials") { this.logins.add(1, this.with({ result })); }
   failed(operation: string) { this.failures.add(1, this.with({ operation })); }
   requestStarted() { this.inFlight.add(1, this.with()); }
-  requestEnded() { this.inFlight.add(-1, this.with()); }
+  requestEnded(operation: string, status: number, seconds: number) {
+    this.inFlight.add(-1, this.with());
+    this.duration.record(seconds, this.with({ operation, status_class: `${Math.floor(status / 100)}xx` }));
+  }
 }
 
 /** The metrics of this process, on the global meter provider the SDK registered (or the no-op one). */

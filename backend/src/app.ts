@@ -53,14 +53,14 @@ export function createApp(deps: AppDeps): Express {
   app.disable("x-powered-by");
   app.set("trust proxy", deps.config.trustProxy);
   app.use("/api", (req, res, next) => {
-    // In-flight gauge and the request log, as a console line and an OpenTelemetry log record in the request's trace (#103).
+    // In-flight gauge, request time and the request log, as a console line and an OpenTelemetry log record in the request's trace (#103).
     const start = Date.now();
     const ctx = context.active();
     deps.metrics.requestStarted();
     res.once("close", () => {
-      deps.metrics.requestEnded();
-      if (!deps.config.log || req.path === "/health") return;
       const ms = Date.now() - start;
+      deps.metrics.requestEnded(operationOf(req), res.statusCode, ms / 1000);
+      if (!deps.config.log || req.path === "/health") return;
       const line = `${req.method} ${req.originalUrl.split("?")[0]} ${res.statusCode} ${ms}ms`;
       console.log(line);
       emitLog(res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : "info", line, {

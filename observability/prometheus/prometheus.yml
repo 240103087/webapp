@@ -1,0 +1,16 @@
+# Metrics come in over OTLP (--web.enable-otlp-receiver); nothing is scraped but Prometheus itself.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+otlp:
+  # The environment and version of the service also become labels, for metrics that do not set them
+  promote_resource_attributes: [service.version, deployment.environment.name]
+
+storage:
+  tsdb:
+    out_of_order_time_window: 30m
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs: [{ targets: ["localhost:9090"] }]

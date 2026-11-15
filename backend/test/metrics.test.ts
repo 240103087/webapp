@@ -101,9 +101,12 @@ describe("MoveEasy metrics (#104)", () => {
     expect(points.map((p) => [p.attributes.operation, p.value])).toEqual([["POST /api/tags", 1]]);
   });
 
-  it("the in-flight gauge goes back to zero after the requests", async () => {
+  it("the in-flight gauge goes back to zero; request time is recorded by route template", async () => {
     const { app, reader } = await setup();
     await request(app).get("/api/public/tags/7KQ4M2XP").set(V);
     expect(await reader.value("moveeasy.http.requests.in_flight")).toBe(0);
+    const time = (await reader.points("moveeasy.http.request.duration")).find((p) => p.attributes.operation === "GET /api/public/tags/:code");
+    expect(time?.attributes.status_class).toBe("2xx");
+    expect((time?.value as Histogram).count).toBe(1);
   });
 });

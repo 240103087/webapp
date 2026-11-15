@@ -1,0 +1,87 @@
+# MoveEasy alert rules (#105). The local Grafana loads this file; `observability/grafana/provision.mjs` sends the same
+# group to Grafana Cloud through its API (it swaps the "prometheus" datasource uid for the cloud one).
+# The on-call agent (#106) gets every firing alert with these labels and annotations.
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: moveeasy
+    folder: MoveEasy
+    interval: 1m
+    rules:
+      - uid: moveeasy-server-failures
+        title: MoveEasy server failures
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: sum by (environment, version, operation) (increase(moveeasy_operation_failures_total[5m]))
+              instant: true
+              range: false
+          - refId: B
+            datasourceUid: __expr__
+            model: { refId: B, type: reduce, expression: A, reducer: last }
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions: [{ evaluator: { type: gt, params: [2] } }]
+        noDataState: OK # no failures at all means no series
+        execErrState: Error
+        for: 1m
+        labels:
+          severity: critical
+          service: moveeasy
+        annotations:
+          summary: '{{ $labels.operation }} failed {{ printf "%.0f" $values.B.Value }} times in 5 minutes in {{ $labels.environment }} (version {{ $labels.version }})'
+          description: >-
+            Requests to {{ $labels.operation }} end in an unexpected 500. Users cannot finish this action.
+            Logs: {service_name="moveeasy"} | severity_text="ERROR" | http_route="{{ $labels.operation }}"
+          owner: https://github.com/240103087/webapp
+          runbook_url: https://github.com/240103087/webapp/blob/main/_docs/devops.md#when-an-alert-fires
+          __dashboardUid__: moveeasy
+          __panelId__: "15"
+        isPaused: false
+
+      - uid: moveeasy-pin-lockouts
+        title: MoveEasy PIN lockouts
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 900, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: sum by (environment, version) (increase(moveeasy_pin_attempts_total{result="locked_out"}[10m]))
+              instant: true
+              range: false
+          - refId: B
+            datasourceUid: __expr__
+            model: { refId: B, type: reduce, expression: A, reducer: last }
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions: [{ evaluator: { type: gt, params: [5] } }]
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        labels:
+          severity: warning
+          service: moveeasy
+        annotations:
+          summary: '{{ printf "%.0f" $values.B.Value }} visitors locked out by wrong PINs in 10 minutes in {{ $labels.environment }}'
+          description: >-
+            Many wrong PINs in a short time: someone may be guessing PINs, or a change broke PIN checks.
+            Compare moveeasy_pin_attempts_total by result on the dashboard.
+          owner: https://github.com/240103087/webapp
+          runbook_url: https://github.com/240103087/webapp/blob/main/_docs/devops.md#when-an-alert-fires
+          __dashboardUid__: moveeasy
+          __panelId__: "16"
+        isPaused: false
