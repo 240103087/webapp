@@ -139,6 +139,10 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # One plain image manifest, no attestation index: `imagetools create` (the :prod tag here and in
+          # promote.yml) failed to copy the attestation manifest on GHCR ("manifests/sha256:... not found")
+          provenance: false
+          sbom: false
       - name: First run only - give prod an image to start from
         env:
           IMAGE: ${{ steps.meta.outputs.image }}
