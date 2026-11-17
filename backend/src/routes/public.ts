@@ -68,8 +68,10 @@ export function publicRoutes(deps: AppDeps): Router {
         const t = tag!;
         if (!d.preview) {
           const visitor = visitorId(req);
-          if (shouldCountScan(await store.listScans([t.id]), visitor, deps.now()))
+          if (shouldCountScan(await store.listScans([t.id]), visitor, deps.now())) {
             await store.insertScan({ id: newId("s"), tagId: t.id, visitorId: visitor, at: deps.now().toISOString() });
+            deps.metrics.tagScanned(t.kind);
+          }
         }
         const move = t.moveId ? await store.getMove(t.moveId) : null;
         const media = await store.listMedia([t.id]);
@@ -84,6 +86,7 @@ export function publicRoutes(deps: AppDeps): Router {
         };
       }
     }
+    deps.metrics.tagViewed(view.state);
     res.setHeader("Cache-Control", "no-store");
     res.json(view);
   }));
@@ -96,15 +99,20 @@ export function publicRoutes(deps: AppDeps): Router {
     if (d.state !== "pinRequired") throw new HttpError(409, "not_pin_protected", "This tag does not need a PIN right now");
     const lockMessage = `Too many attempts. Try again in ${PIN_LOCK_MINUTES} minutes`;
     const before = await access.attempts(req, tag);
-    if (before.lockedUntil) throw new HttpError(423, "locked", lockMessage, { attemptsLeft: 0, lockedUntil: before.lockedUntil });
+    if (before.lockedUntil) {
+      deps.metrics.pinAttempt("blocked");
+      throw new HttpError(423, "locked", lockMessage, { attemptsLeft: 0, lockedUntil: before.lockedUntil });
+    }
     const visitor = visitorId(req);
     if (!tag.pinHash || !(await checkSecret(pin, tag.pinHash))) {
       await store.insertPinFailure({ id: newId("pf"), tagId: tag.id, visitorId: visitor, at: deps.now().toISOString() });
       const after = await access.attempts(req, tag);
+      deps.metrics.pinAttempt(after.lockedUntil ? "locked_out" : "wrong");
       if (after.lockedUntil) throw new HttpError(423, "locked", lockMessage, { attemptsLeft: 0, lockedUntil: after.lockedUntil });
       throw new HttpError(403, "wrong_pin", `Wrong PIN. ${after.attemptsLeft} ${after.attemptsLeft === 1 ? "attempt" : "attempts"} left`, after);
     }
     await store.clearPinFailures(tag.id, visitor);
+    deps.metrics.pinAttempt("ok");
     const accessToken = newToken();
     const expiresAt = new Date(deps.now().getTime() + UNLOCK_HOURS * 3_600_000).toISOString();
     await store.insertUnlock({ token: accessToken, tagId: tag.id, expiresAt });

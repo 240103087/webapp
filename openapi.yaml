@@ -45,9 +45,17 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [ok]
+                required: [ok, environment, version]
                 properties:
                   ok: { type: boolean, example: true }
+                  environment:
+                    type: string
+                    description: Where this runs, from APP_ENV (`dev`, `prod`, `local`) (#101)
+                    example: dev
+                  version:
+                    type: string
+                    description: The image tag baked in at build time, from APP_VERSION; `local` outside an image (#101)
+                    example: 20261115-130501-00b2815
 
   # ---------------------------------------------------------------- auth
   /api/auth/signup:

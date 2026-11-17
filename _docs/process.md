@@ -45,6 +45,7 @@ something that runs.
 | 5 | Connect | the frontend talks to the backend; end-to-end tests in a real browser |
 | 6 | Bug bash | the app tested by hand; every bug filed as `user-test-bug` and fixed |
 | 7 | Deploy (#48) | one Docker image, Postgres, Docker Compose, tests against the stack, AWS with CloudFormation, CI/CD with a health check (#70-#76), an `e2e-test` per feature (#80-#97), Render (#98) |
+| 8 | DevOps and observability (#100) | dev and prod from one image, a manual promotion, OpenTelemetry, MoveEasy metrics and dashboard, alerts, an AI agent on call (#101-#106, `_docs/devops.md`) |
 
 Iteration 7 follows "Deploy a Full-Stack App with AI Coding Assistants":
 containerize, switch to Postgres, add Compose and tests against it, deploy
@@ -95,7 +96,10 @@ PM grooms --> Engineer implements --> QA verifies --PASS--> merge, QA closes
 2. Then, in parallel: the Playwright tests on `npm start` with SQLite
    (`npm run e2e`), and the Docker Compose stack with Postgres
    (`npm run test:stack`)
-3. On `main` only, when the repository variable `AWS_DEPLOY_ROLE_ARN` is
+3. On `main` only: build the image once, push it to
+   `ghcr.io/240103087/webapp:<YYYYMMDD-HHMMSS-sha>` and deploy it to the dev environment on Render.
+   Prod changes only through "Promote dev to prod" (`_docs/devops.md`, #101, #102)
+4. On `main` only, when the repository variable `AWS_DEPLOY_ROLE_ARN` is
    set: deploy to AWS through the GitHub OIDC role and SSM, then poll
    `/api/health` until it answers 200 (`deploy/aws/README.md`)
 

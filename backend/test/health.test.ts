@@ -10,7 +10,13 @@ describe("skeleton (#23)", () => {
   it("answers the health check", async () => {
     const res = await request(await app()).get("/api/health");
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ ok: true });
+    expect(res.body).toEqual({ ok: true, environment: "local", version: "local" });
+  });
+
+  it("reports the environment and version it runs (#101)", async () => {
+    const { app } = await testApp({ config: { seed: false, appEnv: "dev", appVersion: "20261115-130501-abc1234" } });
+    const res = await request(app).get("/api/health");
+    expect(res.body).toEqual({ ok: true, environment: "dev", version: "20261115-130501-abc1234" });
   });
 
   it("unknown api route is a 404 in the error format", async () => {

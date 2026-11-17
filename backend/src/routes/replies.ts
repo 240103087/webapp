@@ -27,6 +27,7 @@ export function replyRoutes(deps: AppDeps): Router {
     if (recent.length >= REPLY_LIMIT_PER_HOUR) throw new HttpError(429, "too_many_replies", "Too many replies right now. Try again later.");
     const row: ReplyRow = { id: newId("r"), tagId: tag.id, name: input.name, message: input.message, read: false, createdAt: deps.now().toISOString() };
     await store.insertReply(row);
+    deps.metrics.replyCreated();
     res.status(201).json(toReply(row));
   }));
 

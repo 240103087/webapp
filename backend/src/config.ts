@@ -25,6 +25,10 @@ export interface Config {
   log: boolean;
   /** Express `trust proxy`: which proxies may set X-Forwarded-For. `loopback` unless TRUST_PROXY says otherwise (#72). */
   trustProxy: string;
+  /** Which environment this is (`dev`, `prod`, `local`), from APP_ENV (#101). On every metric, trace and log. */
+  appEnv: string;
+  /** The image tag baked in at build time, from APP_VERSION (#101). `local` outside an image. */
+  appVersion: string;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -43,5 +47,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     log: env.NODE_ENV !== "test" && env.LOG !== "0",
     // Behind Caddy in Docker the proxy has a private address: TRUST_PROXY="loopback, uniquelocal".
     trustProxy: env.TRUST_PROXY ?? "loopback",
+    appEnv: env.APP_ENV || "local",
+    appVersion: env.APP_VERSION || "local",
   };
 }

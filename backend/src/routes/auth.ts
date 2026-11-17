@@ -24,6 +24,7 @@ export function authRoutes(deps: AppDeps): Router {
     }
     const user: UserRow = { id: newId("u"), name: input.name, email: input.email, passwordHash: await hashSecret(input.password), createdAt: deps.now().toISOString() };
     await store.insertUser(user);
+    deps.metrics.signedUp();
     res.status(201).json(await startSession(user));
   }));
 
@@ -31,7 +32,11 @@ export function authRoutes(deps: AppDeps): Router {
     const input = logInSchema.parse(req.body ?? {});
     const user = await store.getUserByEmail(input.email);
     // Same answer for an unknown email and a wrong password, so emails cannot be probed.
-    if (!user || !(await checkSecret(input.password, user.passwordHash))) throw new HttpError(401, "bad_credentials", "Email or password is wrong");
+    if (!user || !(await checkSecret(input.password, user.passwordHash))) {
+      deps.metrics.loggedIn("bad_credentials");
+      throw new HttpError(401, "bad_credentials", "Email or password is wrong");
+    }
+    deps.metrics.loggedIn("ok");
     res.json(await startSession(user));
   }));
 

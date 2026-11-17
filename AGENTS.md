@@ -20,6 +20,12 @@ through Prisma. See `_docs/plan.md` for the specification.
 - `e2e/` - Playwright tests against the running app; `e2e/tests/features/`
   has one spec per feature, each with its own `e2e-test` issue; `e2e/stack/`
   holds the integration tests for the Docker Compose stack
+- `observability/` - local OpenTelemetry Collector, Prometheus, Loki, Tempo and
+  Grafana; the MoveEasy dashboard and alert rules; `provision.mjs` puts them
+  into Grafana Cloud. `backend/src/telemetry/` is the app side (#103-#105)
+- `on-call-engineer/` - the AI on-call agent's prompt and the local alert
+  poller; `.github/workflows/on-call.yml` is the hosted one (#106).
+  `_docs/devops.md` explains dev/prod, promotion, telemetry and alerts
 - `deploy/` - production Compose override, Caddyfile, AWS CloudFormation
   template and the deploy script (`deploy/aws/README.md`); Render steps in
   `deploy/render/README.md` for the root `render.yaml`
@@ -60,6 +66,10 @@ Read only what the task needs:
   Playwright suite against it, remove it
 - `npm run build && npm start` - the built app and the API on one port
   (:8787), like production
+- `docker compose -f observability/docker-compose.yaml up -d` - the local
+  observability stack (Grafana on :3000); `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 npm start`
+  sends the app's telemetry to it
+- `node on-call-engineer/on-call.mjs` - the local on-call agent (polls Grafana's alerts)
 - `npm run db:migrate -w backend`, `npm run db:seed -w backend` - Prisma
 
 ## Rules
@@ -83,6 +93,9 @@ Read only what the task needs:
 - Every page or panel that loads data catches the error and shows
   `ui/LoadError.tsx` (message, and Retry for no connection or 5xx). Never
   turn a failed load into an empty list
+- A new user action or failure mode gets a metric in
+  `backend/src/telemetry/metrics.ts` (with `environment` and `version`), and
+  the dashboard JSON if people should see it
 - Every change keeps `npm test` and `npm run build` green
 - Commit after every meaningful step; messages reference the issue:
   `Add the PIN form (#15)`

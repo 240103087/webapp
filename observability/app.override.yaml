@@ -1,0 +1,11 @@
+# The app from the root docker-compose.yaml, sending its telemetry to the local stack (#103):
+#   docker compose -f observability/docker-compose.yaml up -d
+#   docker compose -f docker-compose.yaml -f observability/app.override.yaml up --build
+services:
+  app:
+    environment:
+      APP_ENV: local
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://host.docker.internal:4318
+      OTEL_METRIC_EXPORT_INTERVAL: "10000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

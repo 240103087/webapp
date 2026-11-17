@@ -61,10 +61,10 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
 export const openStores: Store[] = [];
 
 /** A fresh app with the seeded store and a clock the test can move. */
-export async function testApp(opts: { now?: Date; config?: Partial<Config> } = {}) {
+export async function testApp(opts: { now?: Date; config?: Partial<Config>; meter?: import("@opentelemetry/api").Meter } = {}) {
   const { buildDeps, createApp } = await import("../src/app");
   const clock = { now: opts.now ?? new Date("2026-10-19T10:00:00Z") };
-  const deps = await buildDeps(testConfig(opts.config), () => clock.now);
+  const deps = await buildDeps(testConfig(opts.config), () => clock.now, opts.meter);
   openStores.push(deps.store);
   // Every response goes through the contract check (#32).
   const { default: express } = await import("express");

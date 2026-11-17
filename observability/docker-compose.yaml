@@ -1,0 +1,79 @@
+# Local observability stack (#103), as in the article: the OpenTelemetry Collector receives OTLP from the app
+# and sends metrics to Prometheus, logs to Loki and traces to Tempo. Grafana shows them, with the MoveEasy
+# dashboard and alert rules already provisioned (#104, #105).
+#
+#   docker compose -f observability/docker-compose.yaml up -d                              # Grafana on http://localhost:3000
+#   docker compose -f docker-compose.yaml -f observability/app.override.yaml up --build     # the app, wired to it
+#
+# Or run the app outside Docker: OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 npm start
+# A separate Compose project ("observability"), so it outlives app restarts. Dev and prod send to Grafana Cloud instead
+# (_docs/devops.md).
+name: observability
+
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.119.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./collector/config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP (the app uses this)
+    depends_on: [prometheus, loki, tempo]
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=7d
+      - --web.enable-otlp-receiver # metrics arrive over OTLP from the collector
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus:/prometheus
+    ports: ["9090:9090"]
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:3.4.2
+    command: ["-config.file=/etc/loki/config.yaml"]
+    volumes:
+      - ./loki/config.yaml:/etc/loki/config.yaml:ro
+      - loki:/loki
+    ports: ["3100:3100"]
+    restart: unless-stopped
+
+  tempo:
+    image: grafana/tempo:2.7.1
+    command: ["-config.file=/etc/tempo/config.yaml"]
+    user: "0" # writes its blocks to the named volume
+    volumes:
+      - ./tempo/config.yaml:/etc/tempo/config.yaml:ro
+      - tempo:/var/tempo
+    ports: ["3200:3200"]
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:12.0.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_AUTH_ANONYMOUS_ENABLED: "true" # read-only viewer without logging in; local only
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_SERVER_ROOT_URL: ${GRAFANA_URL:-http://localhost:3000}
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/moveeasy.json
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana:/var/lib/grafana
+    ports: ["3000:3000"]
+    depends_on: [prometheus, loki, tempo]
+    restart: unless-stopped
+
+volumes:
+  prometheus:
+  loki:
+  tempo:
+  grafana:
